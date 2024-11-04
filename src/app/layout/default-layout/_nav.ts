@@ -9,7 +9,7 @@ export const navItems: INavData[] = [
   {
     name: 'Members',
     url: '/members',    
-    iconComponent: { name: 'cil-notes' },
+    iconComponent: { name: 'cilPeople' },
   },
   {
     name: 'Plan',
@@ -19,12 +19,12 @@ export const navItems: INavData[] = [
   {
     name: 'Courses',
     url: '/courses',
-        iconComponent: { name: 'cil-speedometer' },
+        iconComponent: { name: 'cil-layers' },
   },
   {
     name: 'Tee',
     url: '/tee',
-        iconComponent: { name: 'cil-speedometer' },
+        iconComponent: { name: 'cil-pin' },
   },
   {
     name: 'Events',
@@ -54,6 +54,6 @@ export const navItems: INavData[] = [
   {
     name: 'Report',
     url: '/base/popovers',
-        iconComponent: { name: 'cil-speedometer' },
+        iconComponent: { name: 'cil-description' },
   },
 ];
