@@ -1,1 +1,169 @@
-<p>create-members works!</p>
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+      <c-card class="mb-4">
+        <c-card-header>
+          <strong>New Member Profile</strong>
+        </c-card-header>
+        <c-card-body>
+          <form [formGroup]="memberForm"
+            (ngSubmit)="onSubmit()"
+            cForm
+            class="row g-3 needs-validation"
+          >
+            <!-- Basic Information -->
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="firstName" formControlName="firstName" required type="text" placeholder="First Name" />
+              <label cLabel for="firstName" class="ms-2">First Name</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('firstName')">
+                {{ getErrorMessage('firstName') }}
+              </c-form-feedback>
+            </c-col>
+            
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="lastName" formControlName="lastName" required type="text" placeholder="Last Name" />
+              <label cLabel for="lastName" class="ms-2">Last Name</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('lastName')">
+                {{ getErrorMessage('lastName') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="email" formControlName="email" required type="email" placeholder="Email" />
+              <label cLabel for="email" class="ms-2">Email</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('email')">
+                {{ getErrorMessage('email') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <c-col md="6">
+              <c-input-group class="d-flex">
+                <c-col [cFormFloating]="true" class="w-25">
+                  <select 
+                    formControlName="dialCode">
+                    <option value="+1">+1 (US)</option>
+                    <option value="+44">+44 (UK)</option>
+                    <option value="+91">+91 (IN)</option>
+                  </select>
+                  <label cLabel for="dialCode" class="ms-2">Country Code</label>
+                </c-col>
+                <!-- Country Code Dropdown -->
+            
+                <!-- Phone Number Input -->
+                <input 
+                  cFormControl 
+                  id="phoneNumber" 
+                  formControlName="phoneNumber" 
+                  required 
+                  type="tel" 
+                  placeholder="Phone Number" />
+                </c-input-group>
+              
+              <label cLabel for="phoneNumber" class="ms-2">Phone Number</label>
+            
+              <!-- Validation Message -->
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('phoneNumber')">
+                {{ getErrorMessage('phoneNumber') }}
+              </c-form-feedback>
+            </c-col>
+            
+  
+            <c-col [cFormFloating]="true" md="12">
+              <textarea cFormControl id="address" formControlName="address" required placeholder="Address" rows="3"></textarea>
+              <label cLabel for="address" class="ms-2">Address</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('address')">
+                {{ getErrorMessage('address') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <!-- Membership Information -->
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="dateOfBirth" formControlName="dateOfBirth" required type="date" placeholder="Date of Birth" />
+              <label cLabel for="dateOfBirth" class="ms-2">Date of Birth</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('dateOfBirth')">
+                {{ getErrorMessage('dateOfBirth') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="membershipId" formControlName="membershipId" required type="text" placeholder="Membership ID" />
+              <label cLabel for="membershipId" class="ms-2">Membership ID</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('membershipId')">
+                {{ getErrorMessage('membershipId') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="membershipStartDate" formControlName="membershipStartDate" required type="date" placeholder="Membership Start Date" />
+              <label cLabel for="membershipStartDate" class="ms-2">Membership Start Date</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('membershipStartDate')">
+                {{ getErrorMessage('membershipStartDate') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <!-- Emergency Contact -->
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="emergencyContactName" formControlName="emergencyContactName" required type="text" placeholder="Emergency Contact Name" />
+              <label cLabel for="emergencyContactName" class="ms-2">Emergency Contact Name</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('emergencyContactName')">
+                {{ getErrorMessage('emergencyContactName') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="emergencyContactPhone" formControlName="emergencyContactPhone" required type="tel" placeholder="Emergency Contact Phone" />
+              <label cLabel for="emergencyContactPhone" class="ms-2">Emergency Contact Phone</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('emergencyContactPhone')">
+                {{ getErrorMessage('emergencyContactPhone') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="emergencyContactRelation" formControlName="emergencyContactRelation" required type="text" placeholder="Relationship" />
+              <label cLabel for="emergencyContactRelation" class="ms-2">Relationship</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('emergencyContactRelation')">
+                {{ getErrorMessage('emergencyContactRelation') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <!-- Golf-specific Information -->
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="handicapIndex" formControlName="handicapIndex" required type="number" step="0.1" placeholder="Handicap Index" />
+              <label cLabel for="handicapIndex" class="ms-2">Handicap Index</label>
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('handicapIndex')">
+                {{ getErrorMessage('handicapIndex') }}
+              </c-form-feedback>
+            </c-col>
+  
+            <c-col [cFormFloating]="true" md="6">
+              <input cFormControl id="lockerNumber" formControlName="lockerNumber" type="text" placeholder="Locker Number" />
+              <label cLabel for="lockerNumber" class="ms-2">Locker Number (Optional)</label>
+            </c-col>
+  
+            <!-- Profile Photo -->
+            <c-col md="12">
+              <div class="mb-3">
+                <label cLabel for="profilePhoto" class="form-label">Profile Photo (Optional)</label>
+                <input cFormControl class="form-control" type="file" id="profilePhoto" accept="image/*" (change)="onFileSelected($event)" />
+              </div>
+              <div *ngIf="previewUrl" class="mb-3">
+                <img [src]="previewUrl" alt="Profile Preview" style="max-width: 200px; max-height: 200px;" class="img-thumbnail" />
+                <button cButton color="danger" size="sm" class="ms-2" type="button" (click)="removePhoto()">
+                  Remove Photo
+                </button>
+              </div>
+            </c-col>
+  
+            <!-- Form Actions -->
+            <c-col xs="12">
+              <button cButton class="me-1" color="primary" type="submit" [disabled]="loading">
+                {{ loading ? 'Saving...' : 'Save Member Profile' }}
+              </button>
+              <button (click)="onReset()" cButton color="secondary" type="button" [disabled]="loading">
+                Reset Form
+              </button>
+            </c-col>
+          </form>
+        </c-card-body>
+      </c-card>
+    </c-col>
+  </c-row>

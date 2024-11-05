@@ -16,7 +16,7 @@ export const membersRoutes: Routes = [
       },
       {
         path: 'add',
-        loadComponent: () => import('./create-members/create-members.component').then(m => m.CreateMembersComponent),
+        loadComponent: () => import('./create-members/create-members.component').then(m => m.CreateMemberComponent),
         data: {
           title: 'New Member'
         },
