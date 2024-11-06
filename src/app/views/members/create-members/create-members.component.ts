@@ -5,11 +5,6 @@ import { RowComponent, ColComponent, TextColorDirective, CardComponent, CardHead
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
 
-interface State {
-  id: number;
-  name: string;
-}
-
 @Component({
   selector: 'app-create-members',
   standalone: true,
@@ -48,7 +43,7 @@ export class CreateMemberComponent implements OnInit {
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      dialCode: ['+1', [Validators.required]], // Default dial code
+      dialCode: ['', [Validators.required]], // Default dial code
       phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]], // Adjust as needed for other countries
       address: ['', [Validators.required, Validators.minLength(10)]],
       dateOfBirth: ['', [Validators.required]],

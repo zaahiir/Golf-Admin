@@ -1,1 +1,80 @@
-<p>create-plan works!</p>
+<c-row ngPreserveWhitespaces>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header>
+        <strong>New Subscription Plan</strong>
+      </c-card-header>
+      <c-card-body>
+        <form [formGroup]="planForm" (ngSubmit)="onSubmit()" cForm class="row g-3 needs-validation">
+          <!-- Plan Information -->
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="planName" formControlName="planName" required type="text" placeholder="Plan Name" />
+            <label cLabel for="planName" class="ms-2">Plan Name</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('planName')">
+              {{ getErrorMessage('planName') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="planDescription" formControlName="planDescription" required type="text" placeholder="Plan Description" />
+            <label cLabel for="planDescription" class="ms-2">Plan Description</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('planDescription')">
+              {{ getErrorMessage('planDescription') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <select cSelect id="planType" formControlName="planType" required>
+              <option value="" disabled selected>Select Plan Type</option>
+              <option *ngFor="let type of planTypes" [value]="type.value">{{ type.label }}</option>
+            </select>
+            <label cLabel for="planType" class="ms-2">Plan Type</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('planType')">
+              {{ getErrorMessage('planType') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <select cSelect id="planDuration" formControlName="planDuration" required>
+              <option value="" disabled selected>Select Plan Duration</option>
+              <option *ngFor="let duration of planDurations" [value]="duration.value">{{ duration.label }}</option>
+            </select>
+            <label cLabel for="planDuration" class="ms-2">Plan Duration</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('planDuration')">
+              {{ getErrorMessage('planDuration') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="planPrice" formControlName="planPrice" required type="number" step="0.01" placeholder="Plan Price" />
+            <label cLabel for="planPrice" class="ms-2">Plan Price</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('planPrice')">
+              {{ getErrorMessage('planPrice') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <select cSelect id="billingCycle" formControlName="billingCycle" required>
+              <option value="" disabled selected>Select Billing Cycle</option>
+              <option *ngFor="let cycle of billingCycles" [value]="cycle.value">{{ cycle.label }}</option>
+            </select>
+            <label cLabel for="billingCycle" class="ms-2">Billing Cycle</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('billingCycle')">
+              {{ getErrorMessage('billingCycle') }}
+            </c-form-feedback>
+          </c-col>
+
+          <!-- Form Actions -->
+          <c-col xs="12">
+            <button cButton class="me-1" color="primary" type="submit" [disabled]="loading">
+              {{ loading ? 'Saving...' : 'Save Plan' }}
+            </button>
+            <button (click)="onReset()" cButton color="secondary" type="button" [disabled]="loading">
+              Reset Form
+            </button>
+          </c-col>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
