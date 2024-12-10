@@ -6,7 +6,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "coreui-free-angular-admin-template": {
+    "master-golf-club-admin": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -34,7 +34,7 @@
             "inlineStyleLanguage": "scss",
             "preserveSymlinks": true,
             "assets": [
-              "src/favicon.ico",
+              "src/mgc_logo-03.png",
               "src/assets"
             ],
             "styles": [
