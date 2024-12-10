@@ -15,7 +15,7 @@ import {
   FormSelectDirective
 } from '@coreui/angular';
 import Swal from 'sweetalert2';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 
 interface CourseInfo {
   id: number;
@@ -27,18 +27,6 @@ interface CourseInfo {
 interface TimeSlot {
   time: string;
   available: boolean;
-}
-
-interface BookingDetails {
-  id: number;
-  memberId: string;
-  courseId: number;
-  bookingDate: string;
-  timeSlot: string;
-  numberOfPlayers: number;
-  additionalGuests: number;
-  cartRequired: boolean;
-  specialRequirements?: string;
 }
 
 @Component({
@@ -65,11 +53,9 @@ interface BookingDetails {
   styleUrl: './update-booking.component.scss'
 })
 export class UpdateBookingComponent implements OnInit {
-  updateBookingForm!: FormGroup;
+  bookingForm!: FormGroup;
   submitted = false;
   loading = false;
-  bookingId: number | null = null;
-  existingBooking: BookingDetails | null = null;
 
   // Sample course information (would typically come from a service)
   courses: CourseInfo[] = [
@@ -94,85 +80,42 @@ export class UpdateBookingComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    // Get booking ID from route parameter
-    this.route.paramMap.subscribe(params => {
-      const idParam = params.get('id');
-      if (idParam) {
-        this.bookingId = Number(idParam);
-        this.fetchBookingDetails();
-      } else {
-        // Redirect if no booking ID is provided
-        this.router.navigate(['/bookings']);
-      }
-    });
+    this.initializeBookingForm();
   }
 
-  private initializeUpdateBookingForm(booking: BookingDetails): void {
-    this.updateBookingForm = this.formBuilder.group({
-      memberId: [booking.memberId, [Validators.required]],
-      courseId: [booking.courseId, [Validators.required]],
-      bookingDate: [booking.bookingDate, [Validators.required]],
-      timeSlot: [booking.timeSlot, [Validators.required]],
-      numberOfPlayers: [booking.numberOfPlayers, [Validators.required, Validators.min(1), Validators.max(4)]],
-      additionalGuests: [booking.additionalGuests, [Validators.min(0), Validators.max(3)]],
-      cartRequired: [booking.cartRequired],
-      specialRequirements: [booking.specialRequirements || '']
+  private initializeBookingForm(): void {
+    const today = new Date().toISOString().split('T')[0];
+    
+    this.bookingForm = this.formBuilder.group({
+      memberId: ['', [Validators.required]],
+      courseId: ['', [Validators.required]],
+      bookingDate: [today, [Validators.required]],
+      timeSlot: ['', [Validators.required]],
+      numberOfPlayers: [1, [Validators.required, Validators.min(1), Validators.max(4)]],
+      additionalGuests: [0, [Validators.min(0), Validators.max(3)]],
+      cartRequired: [false],
+      specialRequirements: ['']
     });
-  }
-
-  // Fetch booking details for the specific booking ID
-  private async fetchBookingDetails(): Promise<void> {
-    try {
-      this.loading = true;
-      // Simulate fetching booking details (replace with actual API call)
-      const booking = await this.getBookingById(this.bookingId!);
-      
-      if (booking) {
-        this.existingBooking = booking;
-        this.initializeUpdateBookingForm(booking);
-      } else {
-        // Booking not found
-        await Swal.fire({
-          title: 'Booking Not Found',
-          text: 'The requested booking could not be found.',
-          icon: 'error',
-          confirmButtonText: 'Ok'
-        });
-        this.router.navigate(['/bookings']);
-      }
-    } catch (error) {
-      console.error('Error fetching booking details:', error);
-      await Swal.fire({
-        title: 'Error',
-        text: 'Unable to load booking details. Please try again.',
-        icon: 'error',
-        confirmButtonText: 'Ok'
-      });
-      this.router.navigate(['/bookings']);
-    } finally {
-      this.loading = false;
-    }
   }
 
   // Convenience getter for easy access to form controls
   get f() { 
-    return this.updateBookingForm.controls; 
+    return this.bookingForm.controls; 
   }
 
   // Check if a field is invalid
   isFieldInvalid(fieldName: string): boolean {
-    const field = this.updateBookingForm.get(fieldName);
+    const field = this.bookingForm.get(fieldName);
     return Boolean(field && field.invalid && (field.dirty || field.touched || this.submitted));
   }
 
   // Generate error message for invalid fields
   getErrorMessage(fieldName: string): string {
-    const control = this.updateBookingForm.get(fieldName);
+    const control = this.bookingForm.get(fieldName);
     if (!control || !control.errors) return '';
 
     if (control.errors['required']) return 'This field is required';
@@ -189,29 +132,29 @@ export class UpdateBookingComponent implements OnInit {
 
   // Get selected course details
   getSelectedCourse(): CourseInfo | undefined {
-    const courseId = this.updateBookingForm.get('courseId')?.value;
+    const courseId = this.bookingForm.get('courseId')?.value;
     return this.courses.find(course => course.id === Number(courseId));
   }
 
-  // Submit updated booking form
+  // Submit booking form
   async onSubmit(): Promise<void> {
     this.submitted = true;
 
     // Check form validity
-    if (this.updateBookingForm.invalid) {
+    if (this.bookingForm.invalid) {
       return;
     }
 
     try {
       this.loading = true;
 
-      // Simulate booking update (replace with actual API call)
-      await this.updateBooking(this.bookingId!, this.updateBookingForm.value);
+      // Simulate booking submission (replace with actual API call)
+      await this.submitBooking(this.bookingForm.value);
 
       // Show success message
       await Swal.fire({
-        title: 'Booking Updated!',
-        text: 'Your tee time has been successfully updated.',
+        title: 'Booking Successful!',
+        text: 'Your tee time has been booked successfully.',
         icon: 'success',
         confirmButtonText: 'Ok'
       });
@@ -219,12 +162,12 @@ export class UpdateBookingComponent implements OnInit {
       // Navigate to bookings list or dashboard
       this.router.navigate(['/bookings']);
     } catch (error) {
-      console.error('Booking update error:', error);
+      console.error('Booking submission error:', error);
 
       // Show error message
       await Swal.fire({
-        title: 'Update Failed',
-        text: 'Unable to update your booking. Please try again.',
+        title: 'Booking Failed',
+        text: 'Unable to complete your booking. Please try again.',
         icon: 'error',
         confirmButtonText: 'Ok'
       });
@@ -233,43 +176,23 @@ export class UpdateBookingComponent implements OnInit {
     }
   }
 
-  // Reset form to original booking details
+  // Reset form
   onReset(): void {
     this.submitted = false;
-    if (this.existingBooking) {
-      this.initializeUpdateBookingForm(this.existingBooking);
-    }
+    this.bookingForm.reset({
+      bookingDate: new Date().toISOString().split('T')[0],
+      numberOfPlayers: 1,
+      additionalGuests: 0,
+      cartRequired: false
+    });
   }
 
-  // Simulate booking update (replace with actual service method)
-  private async updateBooking(bookingId: number, bookingData: any): Promise<void> {
+  // Simulate booking submission (replace with actual service method)
+  private async submitBooking(bookingData: any): Promise<void> {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // In a real application, you would call a booking service here
-    console.log(`Updating booking ${bookingId} with:`, bookingData);
-  }
-
-  // Simulate getting booking by ID (replace with actual service method)
-  private async getBookingById(bookingId: number): Promise<BookingDetails | null> {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Mock existing booking (in real app, this would come from a backend service)
-    const mockBookings: BookingDetails[] = [
-      {
-        id: 1,
-        memberId: 'M12345',
-        courseId: 1,
-        bookingDate: new Date().toISOString().split('T')[0],
-        timeSlot: '08:00 AM',
-        numberOfPlayers: 2,
-        additionalGuests: 1,
-        cartRequired: true,
-        specialRequirements: 'Prefer shaded tee area'
-      }
-    ];
-
-    return mockBookings.find(booking => booking.id === bookingId) || null;
+    console.log('Booking submitted:', bookingData);
   }
 }

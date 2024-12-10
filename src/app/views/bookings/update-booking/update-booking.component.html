@@ -2,10 +2,10 @@
     <c-col xs="12">
       <c-card class="mb-4">
         <c-card-header>
-          <strong>Update Tee Time Booking</strong>
+          <strong>Book Tee Time</strong>
         </c-card-header>
         <c-card-body>
-          <form [formGroup]="updateBookingForm" (ngSubmit)="onSubmit()" cForm class="row g-3 needs-validation">
+          <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" cForm class="row g-3 needs-validation">
             <!-- Member ID -->
             <c-col [cFormFloating]="true" md="6">
               <input 
@@ -159,7 +159,7 @@
                 type="submit" 
                 [disabled]="loading"
               >
-                {{ loading ? 'Updating...' : 'Update Tee Time' }}
+                {{ loading ? 'Booking...' : 'Book Tee Time' }}
               </button>
               <button 
                 (click)="onReset()" 
