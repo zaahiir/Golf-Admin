@@ -1,11 +1,16 @@
 import { Routes } from '@angular/router';
+import { LoginComponent } from './auth/login/login.component';
 import { DefaultLayoutComponent } from './layout';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'dashboard',
+    redirectTo: 'login',
     pathMatch: 'full'
+  },
+  {
+    path: 'login',
+    component: LoginComponent
   },
   {
     path: '',
