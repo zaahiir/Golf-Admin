@@ -26,7 +26,7 @@
           <c-col [cFormFloating]="true" md="6">
             <select cSelect id="planType" formControlName="planType" required>
               <option value="" disabled selected>Select Plan Type</option>
-              <option *ngFor="let type of planTypes" [value]="type.value">{{ type.label }}</option>
+              <option *ngFor="let type of planTypes" [value]="type.id">{{ type.planTypeName }}</option>
             </select>
             <label cLabel for="planType" class="ms-2">Plan Type</label>
             <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('planType')">
@@ -37,7 +37,7 @@
           <c-col [cFormFloating]="true" md="6">
             <select cSelect id="planDuration" formControlName="planDuration" required>
               <option value="" disabled selected>Select Plan Duration</option>
-              <option *ngFor="let duration of planDurations" [value]="duration.value">{{ duration.label }}</option>
+              <option *ngFor="let duration of planDurations" [value]="duration.id">{{ duration.planDurationName }}</option>
             </select>
             <label cLabel for="planDuration" class="ms-2">Plan Duration</label>
             <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('planDuration')">
@@ -54,13 +54,13 @@
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
-            <select cSelect id="billingCycle" formControlName="billingCycle" required>
+            <select cSelect id="planCycle" formControlName="planCycle" required>
               <option value="" disabled selected>Select Billing Cycle</option>
-              <option *ngFor="let cycle of billingCycles" [value]="cycle.value">{{ cycle.label }}</option>
+              <option *ngFor="let cycle of planCycles" [value]="cycle.id">{{ cycle.planCycleName }}</option>
             </select>
-            <label cLabel for="billingCycle" class="ms-2">Billing Cycle</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('billingCycle')">
-              {{ getErrorMessage('billingCycle') }}
+            <label cLabel for="planCycle" class="ms-2">Billing Cycle</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('planCycle')">
+              {{ getErrorMessage('planCycle') }}
             </c-form-feedback>
           </c-col>
 
