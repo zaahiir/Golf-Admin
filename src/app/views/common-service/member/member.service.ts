@@ -24,8 +24,8 @@ export class MemberService {
     this.gender = this.apiUrl + "gender/";
     this.nationality = this.apiUrl + "country/";
     this.plan = this.apiUrl + "plan/";
-    this.paymentStatus = this.apiUrl + "paymentMethod/";
-    this.paymentMethod = this.apiUrl + "paymentStatus/";
+    this.paymentStatus = this.apiUrl + "paymentStatus/";
+    this.paymentMethod = this.apiUrl + "paymentMethod/";
   }
 
   listMember(id: string = '0') {
