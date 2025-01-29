@@ -5,13 +5,14 @@ import axios from 'axios';
 @Injectable({
   providedIn: 'root'
 })
-export class PlanService {
+export class MemberService {
   private apiUrl: string;
   private lists: string;
   private processing: string;
   private deletion: string;
   private gender: string;
   private nationality: string;
+  private plan: string;
   private paymentStatus: string;
   private paymentMethod: string;
 
@@ -22,19 +23,20 @@ export class PlanService {
     this.deletion = this.apiUrl + "member/0/deletion/";
     this.gender = this.apiUrl + "gender/";
     this.nationality = this.apiUrl + "country/";
+    this.plan = this.apiUrl + "plan/";
     this.paymentStatus = this.apiUrl + "paymentMethod/";
     this.paymentMethod = this.apiUrl + "paymentStatus/";
   }
 
-  listPlan(id: string = '0') {
+  listMember(id: string = '0') {
     return axios.get(this.lists.replace('0', id));
   }
 
-  processPlan(data: any, id: string = '0') {
+  processMember(data: any, id: string = '0') {
     return axios.post(this.processing.replace('0', id), data);
   }
 
-  deletePlan(id: string) {
+  deleteMember(id: string) {
     return axios.get(this.deletion.replace('0', id));
   }
 
@@ -46,11 +48,25 @@ export class PlanService {
     return axios.get(this.nationality);
   }
 
+  getPlan() {
+    return axios.get(this.plan);
+  }
+
   getPaymentStatus() {
     return axios.get(this.paymentStatus);
   }
 
   getPaymentMethod() {
     return axios.get(this.paymentMethod);
+  }
+
+  async getLastMemberId(year: string, month: string): Promise<string | null> {
+    try {
+      const response = await axios.get(`${this.apiUrl}/members/last-member-id/${year}/${month}`);
+      return response.data?.data?.memberId || null;
+    } catch (error) {
+      console.error('Error fetching last member ID:', error);
+      return null;
+    }
   }
 }
