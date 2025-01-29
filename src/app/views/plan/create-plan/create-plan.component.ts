@@ -1,4 +1,3 @@
-// create-plan.component.ts
 import { Component, OnInit } from '@angular/core';
 import { NgStyle, NgClass, NgForOf, NgIf, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -26,11 +25,13 @@ interface PlanCycle {
   selector: 'app-create-plan',
   standalone: true,
   imports: [
-    NgIf, CommonModule, NgForOf, RowComponent, ColComponent,
-    TextColorDirective, CardComponent, FormFloatingDirective, CardHeaderComponent,
-    CardBodyComponent, ReactiveFormsModule, FormsModule, FormDirective,
-    FormLabelDirective, FormControlDirective, FormFeedbackComponent,
-    FormSelectDirective, ButtonDirective
+    NgIf, CommonModule, NgForOf, NgStyle, NgClass,
+    RowComponent, ColComponent, TextColorDirective,
+    CardComponent, FormFloatingDirective, CardHeaderComponent,
+    CardBodyComponent, ReactiveFormsModule, FormsModule,
+    FormDirective, FormLabelDirective, FormControlDirective,
+    FormFeedbackComponent, FormSelectDirective, ButtonDirective,
+    InputGroupComponent, InputGroupTextDirective
   ],
   templateUrl: './create-plan.component.html',
   styleUrl: './create-plan.component.scss'
@@ -45,48 +46,17 @@ export class CreatePlanComponent implements OnInit {
   planCycles: PlanCycle[] = [];
 
   constructor(
-    private formBuilder: FormBuilder,
+    private fb: FormBuilder,
     private planService: PlanService,
     private router: Router
-  ) {}
-
-  ngOnInit(): void {
+  ) {
     this.initializeForm();
-    this.loadDropdownData();
-  }
-
-  private async loadDropdownData(): Promise<void> {
-    try {
-      const [typesRes, durationsRes, cyclesRes] = await Promise.all([
-        this.planService.getPlanTypes(),
-        this.planService.getPlanDurations(),
-        this.planService.getPlanCycles()
-      ]);
-
-      if (typesRes.data?.code === 1) {
-        this.planTypes = typesRes.data.data;
-      }
-      if (durationsRes.data?.code === 1) {
-        this.planDurations = durationsRes.data.data;
-      }
-      if (cyclesRes.data?.code === 1) {
-        this.planCycles = cyclesRes.data.data;
-      }
-    } catch (error) {
-      console.error('Error loading dropdown data:', error);
-      await Swal.fire({
-        title: 'Error!',
-        text: 'Failed to load form data',
-        icon: 'error',
-        confirmButtonText: 'Ok'
-      });
-    }
   }
 
   private initializeForm(): void {
-    this.planForm = this.formBuilder.group({
-      planName: ['', [Validators.required, Validators.minLength(2)]],
-      planDescription: ['', [Validators.required, Validators.minLength(10)]],
+    this.planForm = this.fb.group({
+      planName: ['', [Validators.required]],
+      planDescription: ['', [Validators.required]],
       planType: ['', [Validators.required]],
       planDuration: ['', [Validators.required]],
       planPrice: ['', [Validators.required, Validators.min(0)]],
@@ -94,20 +64,104 @@ export class CreatePlanComponent implements OnInit {
     });
   }
 
-  get f() {
-    return this.planForm.controls;
+  async ngOnInit(): Promise<void> {
+    try {
+      await this.loadDropdownData();
+    } catch (error) {
+      console.error('Error during initialization:', error);
+      await this.showError('Failed to load form data');
+    }
+  }
+
+  get f() { return this.planForm.controls; }
+
+  private async loadDropdownData(): Promise<void> {
+    try {
+      console.log('Starting to load dropdown data...');
+
+      const [typesRes, durationsRes, cyclesRes] = await Promise.all([
+        this.planService.getPlanTypes(),
+        this.planService.getPlanDurations(),
+        this.planService.getPlanCycles()
+      ]);
+
+      // Log the entire response structure
+      console.log('Raw API Responses:', {
+        types: typesRes,
+        durations: durationsRes,
+        cycles: cyclesRes
+      });
+
+      // Correct data extraction based on API response structure
+      if (typesRes?.data) {
+        this.planTypes = Array.isArray(typesRes.data) ? typesRes.data :
+                        typesRes.data.data ? typesRes.data.data :
+                        [];
+        console.log('Processed Plan Types:', this.planTypes);
+      }
+
+      if (durationsRes?.data) {
+        this.planDurations = Array.isArray(durationsRes.data) ? durationsRes.data :
+                            durationsRes.data.data ? durationsRes.data.data :
+                            [];
+        console.log('Processed Plan Durations:', this.planDurations);
+      }
+
+      if (cyclesRes?.data) {
+        this.planCycles = Array.isArray(cyclesRes.data) ? cyclesRes.data :
+                         cyclesRes.data.data ? cyclesRes.data.data :
+                         [];
+        console.log('Processed Plan Cycles:', this.planCycles);
+      }
+
+      // Handle empty data scenarios
+      if (!this.planTypes.length) {
+        console.warn('No plan types loaded');
+      }
+      if (!this.planDurations.length) {
+        console.warn('No plan durations loaded');
+      }
+      if (!this.planCycles.length) {
+        console.warn('No plan cycles loaded');
+      }
+
+      console.log('Final State:', {
+        planTypes: this.planTypes,
+        planDurations: this.planDurations,
+        planCycles: this.planCycles
+      });
+
+    } catch (error) {
+      console.error('Error loading dropdown data:', error);
+      throw error;
+    }
   }
 
   async onSubmit(): Promise<void> {
     this.submitted = true;
 
     if (this.planForm.invalid) {
+      Object.keys(this.planForm.controls).forEach(key => {
+        const control = this.planForm.get(key);
+        if (control?.invalid) {
+          control.markAsTouched();
+          console.log(`Invalid field: ${key}`, control.errors);
+        }
+      });
       return;
     }
 
     try {
       this.loading = true;
-      const response = await this.planService.processPlan(this.planForm.value, '0');
+      const formData = {
+        ...this.planForm.value,
+        planType: Number(this.planForm.value.planType),
+        planDuration: Number(this.planForm.value.planDuration),
+        planCycle: Number(this.planForm.value.planCycle),
+        planPrice: Number(this.planForm.value.planPrice)
+      };
+
+      const response = await this.planService.processPlan(formData, '0');
 
       if (response.data?.code === 1) {
         await Swal.fire({
@@ -122,12 +176,7 @@ export class CreatePlanComponent implements OnInit {
       }
     } catch (error) {
       console.error('Error creating plan:', error);
-      await Swal.fire({
-        title: 'Error!',
-        text: error instanceof Error ? error.message : 'Failed to create plan',
-        icon: 'error',
-        confirmButtonText: 'Ok'
-      });
+      await this.showError(error instanceof Error ? error.message : 'Failed to create plan');
     } finally {
       this.loading = false;
     }
@@ -136,21 +185,13 @@ export class CreatePlanComponent implements OnInit {
   onReset(): void {
     this.submitted = false;
     this.planForm.reset();
+    Object.keys(this.planForm.controls).forEach(key => {
+      const control = this.planForm.get(key);
+      control?.setErrors(null);
+    });
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.planForm.get(fieldName);
-    return Boolean(field && field.invalid && (field.dirty || field.touched || this.submitted));
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const control = this.planForm.get(fieldName);
-    if (!control || !control.errors) return '';
-
-    if (control.errors['required']) return 'This field is required';
-    if (control.errors['minlength']) return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
-    if (control.errors['min']) return `Minimum value is ${control.errors['min'].min}`;
-
-    return 'Invalid input';
+  private async showError(message: string): Promise<void> {
+    await Swal.fire('Error', message, 'error');
   }
 }
