@@ -22,7 +22,7 @@ export const membersRoutes: Routes = [
         },
       },
       {
-        path: 'update',
+        path: 'update/:id',
         loadComponent: () => import('./update-members/update-members.component').then(m => m.UpdateMembersComponent),
         data: {
           title: 'Update Members'

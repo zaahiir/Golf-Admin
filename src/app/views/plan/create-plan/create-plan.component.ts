@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NgStyle, NgClass, NgForOf, NgIf, CommonModule } from '@angular/common';
+import { NgForOf, NgIf, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RowComponent, ColComponent, TextColorDirective, CardComponent, CardHeaderComponent, CardBodyComponent, FormFloatingDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, ButtonDirective } from '@coreui/angular';
 import Swal from 'sweetalert2';
@@ -25,14 +25,9 @@ interface PlanCycle {
   selector: 'app-create-plan',
   standalone: true,
   imports: [
-    NgIf, CommonModule, NgForOf, NgStyle, NgClass,
-    RowComponent, ColComponent, TextColorDirective,
-    CardComponent, FormFloatingDirective, CardHeaderComponent,
-    CardBodyComponent, ReactiveFormsModule, FormsModule,
-    FormDirective, FormLabelDirective, FormControlDirective,
-    FormFeedbackComponent, FormSelectDirective, ButtonDirective,
-    InputGroupComponent, InputGroupTextDirective
-  ],
+    NgIf, CommonModule, NgForOf, RowComponent, ColComponent, TextColorDirective, CardComponent, FormFloatingDirective, CardHeaderComponent,
+    CardBodyComponent, ReactiveFormsModule, FormsModule, FormDirective, FormLabelDirective, FormControlDirective,
+    FormFeedbackComponent, FormSelectDirective, ButtonDirective ],
   templateUrl: './create-plan.component.html',
   styleUrl: './create-plan.component.scss'
 })
@@ -68,7 +63,6 @@ export class CreatePlanComponent implements OnInit {
     try {
       await this.loadDropdownData();
     } catch (error) {
-      console.error('Error during initialization:', error);
       await this.showError('Failed to load form data');
     }
   }
@@ -77,62 +71,30 @@ export class CreatePlanComponent implements OnInit {
 
   private async loadDropdownData(): Promise<void> {
     try {
-      console.log('Starting to load dropdown data...');
-
       const [typesRes, durationsRes, cyclesRes] = await Promise.all([
         this.planService.getPlanTypes(),
         this.planService.getPlanDurations(),
         this.planService.getPlanCycles()
       ]);
 
-      // Log the entire response structure
-      console.log('Raw API Responses:', {
-        types: typesRes,
-        durations: durationsRes,
-        cycles: cyclesRes
-      });
-
-      // Correct data extraction based on API response structure
       if (typesRes?.data) {
         this.planTypes = Array.isArray(typesRes.data) ? typesRes.data :
                         typesRes.data.data ? typesRes.data.data :
                         [];
-        console.log('Processed Plan Types:', this.planTypes);
       }
 
       if (durationsRes?.data) {
         this.planDurations = Array.isArray(durationsRes.data) ? durationsRes.data :
                             durationsRes.data.data ? durationsRes.data.data :
                             [];
-        console.log('Processed Plan Durations:', this.planDurations);
       }
 
       if (cyclesRes?.data) {
         this.planCycles = Array.isArray(cyclesRes.data) ? cyclesRes.data :
                          cyclesRes.data.data ? cyclesRes.data.data :
                          [];
-        console.log('Processed Plan Cycles:', this.planCycles);
       }
-
-      // Handle empty data scenarios
-      if (!this.planTypes.length) {
-        console.warn('No plan types loaded');
-      }
-      if (!this.planDurations.length) {
-        console.warn('No plan durations loaded');
-      }
-      if (!this.planCycles.length) {
-        console.warn('No plan cycles loaded');
-      }
-
-      console.log('Final State:', {
-        planTypes: this.planTypes,
-        planDurations: this.planDurations,
-        planCycles: this.planCycles
-      });
-
     } catch (error) {
-      console.error('Error loading dropdown data:', error);
       throw error;
     }
   }
@@ -145,7 +107,6 @@ export class CreatePlanComponent implements OnInit {
         const control = this.planForm.get(key);
         if (control?.invalid) {
           control.markAsTouched();
-          console.log(`Invalid field: ${key}`, control.errors);
         }
       });
       return;
@@ -175,7 +136,6 @@ export class CreatePlanComponent implements OnInit {
         throw new Error(response.data?.message || 'Failed to create plan');
       }
     } catch (error) {
-      console.error('Error creating plan:', error);
       await this.showError(error instanceof Error ? error.message : 'Failed to create plan');
     } finally {
       this.loading = false;

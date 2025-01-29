@@ -22,7 +22,7 @@ export const planRoutes: Routes = [
         },
       },
       {
-        path: 'update',
+        path: 'update/:id',
         loadComponent: () => import('./update-plan/update-plan.component').then(m => m.UpdatePlanComponent),
         data: {
           title: 'Update Plans'
