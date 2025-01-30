@@ -214,36 +214,61 @@ export class CreateMemberComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
-    this.submitted = true;
-
-    if (this.memberForm.invalid) {
-      return;
-    }
-
     try {
+      this.submitted = true;
+      console.log('Form submission started', this.memberForm.value);
+      console.log('Form validation status:', this.memberForm.valid);
+
+      if (this.memberForm.invalid) {
+        console.log('Form validation errors:', this.getFormValidationErrors());
+        const firstInvalidField = this.getFirstInvalidField();
+        if (firstInvalidField) {
+          const element = document.querySelector(`[formcontrolname="${firstInvalidField}"]`);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
       this.loading = true;
 
-      // Generate member ID before submitting
+      // Generate member ID
       const memberId = await this.generateMemberId();
+      console.log('Generated Member ID:', memberId);
 
+      // Create FormData
       const formData = new FormData();
       formData.append('memberId', memberId);
 
-      // Append other form fields
+      // Append form fields with proper type checking
       Object.keys(this.memberForm.value).forEach(key => {
-        const value = this.memberForm.value[key];
-        if (key === 'profilePhoto' && this.selectedFile) {
-          formData.append(key, this.selectedFile);
-        } else if (key === 'idProof' && this.memberForm.get('idProof')?.value instanceof File) {
-          formData.append(key, this.memberForm.get('idProof')?.value);
-        } else if (value !== null && value !== undefined) {
-          formData.append(key, value);
+        const value = this.memberForm.get(key)?.value;
+
+        if (value !== null && value !== undefined) {
+          if (key === 'profilePhoto' && this.selectedFile) {
+            formData.append(key, this.selectedFile);
+          } else if (key === 'idProof' && this.memberForm.get('idProof')?.value instanceof File) {
+            formData.append(key, this.memberForm.get('idProof')?.value);
+          } else if (key === 'dateOfBirth' || key === 'membershipStartDate' || key === 'membershipEndDate') {
+            // Ensure dates are in the correct format (YYYY-MM-DD)
+            const dateValue = value ? new Date(value).toISOString().split('T')[0] : '';
+            formData.append(key, dateValue);
+          } else if (typeof value === 'boolean') {
+            formData.append(key, value.toString());
+          } else {
+            formData.append(key, value.toString().trim());
+          }
         }
       });
 
-      const response = await this.memberService.processMember(formData);
+      // Log FormData contents for debugging
+      formData.forEach((value, key) => {
+        console.log(`FormData field - ${key}:`, value);
+      });
 
-      if (response.data?.code === 1) {
+      const response = await this.memberService.processMember(formData);
+      console.log('Server response:', response);
+
+      if (response?.data?.code === 1) {
         await Swal.fire({
           title: 'Success!',
           text: `Member has been created successfully with ID: ${memberId}`,
@@ -252,13 +277,37 @@ export class CreateMemberComponent implements OnInit {
         });
         this.router.navigate(['/members']);
       } else {
-        throw new Error(response.data?.message || 'Failed to create member');
+        throw new Error(response?.data?.message || 'Failed to create member');
       }
     } catch (error) {
+      console.error('Submit error:', error);
       await this.showError(error instanceof Error ? error.message : 'Failed to create member');
     } finally {
       this.loading = false;
     }
+  }
+
+  // Helper method to get all form validation errors
+  private getFormValidationErrors(): Record<string, any> {
+    const errors: Record<string, any> = {};
+    Object.keys(this.memberForm.controls).forEach(key => {
+      const control = this.memberForm.get(key);
+      if (control?.errors) {
+        errors[key] = control.errors;
+      }
+    });
+    return errors;
+  }
+
+  // Helper method to get the first invalid field name
+  private getFirstInvalidField(): string | null {
+    const controls = this.memberForm.controls;
+    for (const name in controls) {
+      if (controls[name].invalid) {
+        return name;
+      }
+    }
+    return null;
   }
 
   onReset(): void {

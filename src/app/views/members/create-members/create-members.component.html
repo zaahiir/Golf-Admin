@@ -5,7 +5,7 @@
         <strong>New Member Profile</strong>
       </c-card-header>
       <c-card-body>
-        <form [formGroup]="memberForm" (ngSubmit)="onSubmit()" cForm class="row g-3 needs-validation">
+        <form [formGroup]="memberForm" (ngSubmit)="onSubmit()" enctype="multipart/form-data" cForm class="row g-3 needs-validation">
           <!-- Basic Information -->
           <c-col [cFormFloating]="true" md="6">
             <input cFormControl id="firstName" formControlName="firstName" type="text" placeholder="First Name" />
@@ -199,7 +199,7 @@
           <!-- Form Actions -->
           <c-col xs="12" class="mt-4">
             <button cButton class="me-2" color="primary" type="submit" [disabled]="loading">
-              {{ loading ? 'Saving...' : 'Save Member' }}
+              {{ loading ? 'Submitting...' : 'Submit' }}
             </button>
             <button cButton color="secondary" type="button" (click)="onReset()" [disabled]="loading">
               Reset Form
