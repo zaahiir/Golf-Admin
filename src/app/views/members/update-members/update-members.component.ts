@@ -8,35 +8,9 @@ import {
   FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective,
   FormSelectDirective, ButtonDirective
 } from '@coreui/angular';
+import { MemberService } from '../../common-service/member/member.service';
 import Swal from 'sweetalert2';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MemberService } from '../../common-service/member/member.service';
-
-interface Member {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  alternatePhoneNumber?: string;
-  address: string;
-  dateOfBirth: string;
-  gender: number;
-  nationality: number;
-  plan: number;
-  golfClubId: string;
-  membershipStartDate: string;
-  membershipEndDate?: string;
-  emergencyContactName: string;
-  emergencyContactPhone: string;
-  emergencyContactRelation: string;
-  paymentStatus: number;
-  paymentMethod: number;
-  referredBy?: string;
-  profilePhoto?: string;
-  idProof?: string;
-  handicap: boolean;
-}
 
 interface Gender {
   id: number;
@@ -46,6 +20,11 @@ interface Gender {
 interface Country {
   id: number;
   countryName: string;
+}
+
+interface Plan {
+  id: number;
+  planName: string;
 }
 
 interface PaymentStatus {
@@ -58,11 +37,6 @@ interface PaymentMethod {
   methodName: string;
 }
 
-interface Plan {
-  id: number;
-  planName: string;
-}
-
 @Component({
   selector: 'app-update-members',
   standalone: true,
@@ -71,7 +45,7 @@ interface Plan {
     TextColorDirective, CardComponent, FormFloatingDirective, CardHeaderComponent,
     CardBodyComponent, ReactiveFormsModule, FormsModule, FormDirective,
     FormLabelDirective, FormControlDirective, FormFeedbackComponent,
-    FormSelectDirective,ButtonDirective
+    FormSelectDirective, ButtonDirective
   ],
   templateUrl: './update-members.component.html',
   styleUrl: './update-members.component.scss'
@@ -89,7 +63,7 @@ export class UpdateMembersComponent implements OnInit {
   paymentStatuses: PaymentStatus[] = [];
   paymentMethods: PaymentMethod[] = [];
 
-  // Photo handling
+  // File handling
   profilePhotoFile: File | null = null;
   idProofFile: File | null = null;
   profilePhotoPreview: string | ArrayBuffer | null = null;
@@ -104,65 +78,16 @@ export class UpdateMembersComponent implements OnInit {
     private memberService: MemberService
   ) {}
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.initializeForm();
+    this.loadDropdownData();
 
-    try {
-      // First, load the dropdown data
-      await this.loadDropdownData();
-
-      // Then, get the ID and load member data
-      const routeParams = await new Promise<any>(resolve => {
-        this.route.params.subscribe(params => resolve(params));
-      });
-
-      if (routeParams['id']) {
-        this.memberId = routeParams['id'];
-        await this.loadMemberData(this.memberId);
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.memberId = params['id'];
+        this.loadMemberData(this.memberId);
       }
-    } catch (error) {
-      console.error('Error during initialization:', error);
-      await this.showError('Failed to initialize form data.');
-    }
-  }
-
-  private async showError(message: string): Promise<void> {
-    await Swal.fire({
-      title: 'Error',
-      text: message,
-      icon: 'error',
-      confirmButtonText: 'Ok'
     });
-  }
-
-  private async loadDropdownData(): Promise<void> {
-    try {
-      const [genderRes, nationalityRes, planRes, paymentStatusRes, paymentMethodRes] = await Promise.all([
-        this.memberService.getGender(),
-        this.memberService.getNationality(),
-        this.memberService.getPlan(),
-        this.memberService.getPaymentStatus(),
-        this.memberService.getPaymentMethod()
-      ]);
-
-      this.genders = genderRes.data.data;
-      this.nationalities = nationalityRes.data.data;
-      this.plans = planRes.data.data;
-      this.paymentStatuses = paymentStatusRes.data.data;
-      this.paymentMethods = paymentMethodRes.data.data;
-
-      // Log the loaded dropdown data
-      console.log('Loaded Dropdown Data:', {
-        genders: this.genders,
-        nationalities: this.nationalities,
-        plans: this.plans,
-        paymentStatuses: this.paymentStatuses,
-        paymentMethods: this.paymentMethods
-      });
-    } catch (error) {
-      console.error('Error loading dropdown data:', error);
-      await Swal.fire('Error', 'Failed to load form data', 'error');
-    }
   }
 
   private initializeForm(): void {
@@ -188,45 +113,54 @@ export class UpdateMembersComponent implements OnInit {
       paymentStatus: ['', [Validators.required]],
       paymentMethod: ['', [Validators.required]],
       referredBy: [''],
-      profilePhoto: [''],
-      idProof: [''],
       handicap: [false]
     });
+  }
+
+  private async loadDropdownData(): Promise<void> {
+    try {
+      const [genderRes, nationalityRes, planRes, paymentStatusRes, paymentMethodRes] = await Promise.all([
+        this.memberService.getGender(),
+        this.memberService.getNationality(),
+        this.memberService.getPlan(),
+        this.memberService.getPaymentStatus(),
+        this.memberService.getPaymentMethod()
+      ]);
+
+      if (genderRes?.data?.code === 1) {
+        this.genders = genderRes.data.data;
+      }
+      if (nationalityRes?.data?.code === 1) {
+        this.nationalities = nationalityRes.data.data;
+      }
+      if (planRes?.data?.code === 1) {
+        this.plans = planRes.data.data;
+      }
+      if (paymentStatusRes?.data?.code === 1) {
+        this.paymentStatuses = paymentStatusRes.data.data;
+      }
+      if (paymentMethodRes?.data?.code === 1) {
+        this.paymentMethods = paymentMethodRes.data.data;
+      }
+    } catch (error) {
+      console.error('Error loading dropdown data:', error);
+      await this.showError('Failed to load form data');
+    }
   }
 
   private async loadMemberData(id: string): Promise<void> {
     try {
       const response = await this.memberService.listMember(id);
-      if (response?.data?.data?.[0]) {
+      if (response?.data?.code === 1 && response?.data?.data?.length > 0) {
         const memberData = response.data.data[0];
 
-        // Map the string values to corresponding IDs
-        const gender = this.genders?.find(g => g.genderName.toLowerCase() === memberData.gender?.toLowerCase())?.id;
-        const nationality = this.nationalities?.find(n => n.countryName.toLowerCase() === memberData.nationality?.toLowerCase())?.id;
-        const plan = this.plans?.find(p => p.planName.toLowerCase() === memberData.plan?.toLowerCase())?.id;
-        const paymentStatus = this.paymentStatuses?.find(s => s.statusName.toLowerCase() === memberData.paymentStatus?.toLowerCase())?.id;
-        const paymentMethod = this.paymentMethods?.find(m => m.methodName.toLowerCase() === memberData.paymentMethod?.toLowerCase())?.id;
+        // Find the matching IDs from the arrays based on names
+        const gender = this.genders.find(g => g.genderName === memberData.gender)?.id;
+        const nationality = this.nationalities.find(n => n.countryName === memberData.nationality)?.id;
+        const plan = this.plans.find(p => p.planName === memberData.plan)?.id;
+        const paymentStatus = this.paymentStatuses.find(s => s.statusName === memberData.paymentStatus)?.id;
+        const paymentMethod = this.paymentMethods.find(m => m.methodName === memberData.paymentMethod)?.id;
 
-        // Add logging to debug the mapping
-        console.log('Mapping Details:', {
-          originalData: memberData,
-          mappedValues: {
-            gender,
-            nationality,
-            plan,
-            paymentStatus,
-            paymentMethod
-          },
-          availableOptions: {
-            genders: this.genders,
-            nationalities: this.nationalities,
-            plans: this.plans,
-            paymentStatuses: this.paymentStatuses,
-            paymentMethods: this.paymentMethods
-          }
-        });
-
-        // Patch the form with the mapped values
         this.memberForm.patchValue({
           firstName: memberData.firstName,
           lastName: memberData.lastName,
@@ -235,39 +169,34 @@ export class UpdateMembersComponent implements OnInit {
           alternatePhoneNumber: memberData.alternatePhoneNumber,
           address: memberData.address,
           dateOfBirth: memberData.dateOfBirth,
-          gender: gender || '', // Provide default values if mapping fails
-          nationality: nationality || '',
-          plan: plan || '',
+          gender: gender,
+          nationality: nationality,
+          plan: plan,
           golfClubId: memberData.golfClubId,
           membershipStartDate: memberData.membershipStartDate,
           membershipEndDate: memberData.membershipEndDate,
           emergencyContactName: memberData.emergencyContactName,
           emergencyContactPhone: memberData.emergencyContactPhone,
           emergencyContactRelation: memberData.emergencyContactRelation,
-          paymentStatus: paymentStatus || '',
-          paymentMethod: paymentMethod || '',
+          paymentStatus: paymentStatus,
+          paymentMethod: paymentMethod,
           referredBy: memberData.referredBy,
           handicap: memberData.handicap
         });
 
-        // Store existing file paths
-        this.existingProfilePhoto = memberData.profilePhoto;
-        this.existingIdProof = memberData.idProof;
-
-        // Set previews for existing files
+        // Handle existing files
         if (memberData.profilePhoto) {
+          this.existingProfilePhoto = memberData.profilePhoto;
           this.profilePhotoPreview = memberData.profilePhoto;
         }
         if (memberData.idProof) {
+          this.existingIdProof = memberData.idProof;
           this.idProofPreview = memberData.idProof;
         }
-
-        // Log the form values after patching
-        console.log('Form values after patch:', this.memberForm.value);
       }
     } catch (error) {
       console.error('Error loading member data:', error);
-      await Swal.fire('Error', 'Failed to load member data', 'error');
+      await this.showError('Failed to load member data');
     }
   }
 
@@ -279,13 +208,11 @@ export class UpdateMembersComponent implements OnInit {
         this.readFile(file).then(result => {
           this.profilePhotoPreview = result;
         });
-        this.memberForm.patchValue({ profilePhoto: file });
       } else {
         this.idProofFile = file;
         this.readFile(file).then(result => {
           this.idProofPreview = result;
         });
-        this.memberForm.patchValue({ idProof: file });
       }
     }
   }
@@ -303,12 +230,10 @@ export class UpdateMembersComponent implements OnInit {
       this.profilePhotoFile = null;
       this.profilePhotoPreview = null;
       this.existingProfilePhoto = null;
-      this.memberForm.patchValue({ profilePhoto: '' });
     } else {
       this.idProofFile = null;
       this.idProofPreview = null;
       this.existingIdProof = null;
-      this.memberForm.patchValue({ idProof: '' });
     }
   }
 
@@ -316,6 +241,12 @@ export class UpdateMembersComponent implements OnInit {
     this.submitted = true;
 
     if (this.memberForm.invalid) {
+      Object.keys(this.memberForm.controls).forEach(key => {
+        const control = this.memberForm.get(key);
+        if (control?.invalid) {
+          control.markAsTouched();
+        }
+      });
       return;
     }
 
@@ -325,37 +256,30 @@ export class UpdateMembersComponent implements OnInit {
       const formData = new FormData();
       Object.keys(this.memberForm.value).forEach(key => {
         const value = this.memberForm.get(key)?.value;
-
-        if (key === 'profilePhoto' && this.profilePhotoFile) {
-          formData.append(key, this.profilePhotoFile);
-        } else if (key === 'idProof' && this.idProofFile) {
-          formData.append(key, this.idProofFile);
-        } else if (value !== null && value !== undefined) {
+        if (value !== null && value !== undefined) {
           formData.append(key, value);
         }
       });
 
+      // Handle file uploads
+      if (this.profilePhotoFile) {
+        formData.append('profilePhoto', this.profilePhotoFile);
+      }
+      if (this.idProofFile) {
+        formData.append('idProof', this.idProofFile);
+      }
+
       const response = await this.memberService.processMember(formData, this.memberId);
 
       if (response?.data?.code === 1) {
-        await Swal.fire({
-          title: 'Success!',
-          text: 'Member profile has been updated successfully',
-          icon: 'success',
-          confirmButtonText: 'Ok'
-        });
+        await Swal.fire('Success', 'Member updated successfully', 'success');
         this.router.navigate(['/members']);
       } else {
         throw new Error(response?.data?.message || 'Failed to update member');
       }
     } catch (error) {
       console.error('Error updating member:', error);
-      await Swal.fire({
-        title: 'Error!',
-        text: 'Failed to update member profile',
-        icon: 'error',
-        confirmButtonText: 'Ok'
-      });
+      await this.showError('Failed to update member');
     } finally {
       this.loading = false;
     }
@@ -379,10 +303,18 @@ export class UpdateMembersComponent implements OnInit {
     if (control.errors['pattern']) {
       if (fieldName.includes('Phone')) return 'Please enter a valid 10-digit phone number';
     }
-    if (control.errors['min']) return `Minimum value is ${control.errors['min'].min}`;
-    if (control.errors['max']) return `Maximum value is ${control.errors['max'].max}`;
-    if (control.errors['minlength']) return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
+    if (control.errors['minlength']) {
+      return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
+    }
 
     return 'Invalid input';
+  }
+
+  private async showError(message: string): Promise<void> {
+    await Swal.fire({
+      title: 'Error',
+      text: message,
+      icon: 'error'
+    });
   }
 }
