@@ -90,7 +90,8 @@ export class CreateMemberComponent implements OnInit {
       referredBy: [''],
       profilePhoto: [''],
       idProof: [''],
-      handicap: [false]
+      handicap: [false],
+      golfClubId: ['']
     });
   }
 
@@ -158,34 +159,6 @@ export class CreateMemberComponent implements OnInit {
     }
   }
 
-  private async generateMemberId(): Promise<string> {
-    try {
-      const currentDate = new Date();
-      const year = currentDate.getFullYear().toString().slice(-2);
-      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-
-      // Get the last member ID for the current month
-      const lastMemberId = await this.memberService.getLastMemberId(year, month);
-
-      let sequence: number;
-      if (!lastMemberId) {
-        // If no members exist for this month, start with 0001
-        sequence = 1;
-      } else {
-        // Extract the sequence number from the last member ID and increment it
-        const lastSequence = parseInt(lastMemberId.slice(-4));
-        sequence = lastSequence + 1;
-      }
-
-      // Format: MGC25010001 (MGC + YY + MM + SequenceNumber)
-      const sequenceStr = sequence.toString().padStart(4, '0');
-      return `${this.CLUB_PREFIX}${year}${month}${sequenceStr}`;
-    } catch (error) {
-      console.error('Error generating member ID:', error);
-      throw new Error('Failed to generate member ID');
-    }
-  }
-
   onFileSelected(event: any, type: 'profile' | 'idProof'): void {
     const file = event.target.files[0];
     if (file) {
@@ -217,7 +190,6 @@ export class CreateMemberComponent implements OnInit {
     try {
       this.submitted = true;
       console.log('Form submission started', this.memberForm.value);
-      console.log('Form validation status:', this.memberForm.valid);
 
       if (this.memberForm.invalid) {
         console.log('Form validation errors:', this.getFormValidationErrors());
@@ -231,15 +203,17 @@ export class CreateMemberComponent implements OnInit {
 
       this.loading = true;
 
-      // Generate member ID
-      const memberId = await this.generateMemberId();
-      console.log('Generated Member ID:', memberId);
+      // Generate member ID with MGC prefix
+      const generatedMemberId = await this.generateMemberId();
+      console.log('Generated Golf Club ID:', generatedMemberId);
 
       // Create FormData
       const formData = new FormData();
-      formData.append('memberId', memberId);
 
-      // Append form fields with proper type checking
+      // Set the generated member ID in golfClubId field
+      this.memberForm.patchValue({ golfClubId: generatedMemberId });
+
+      // Append all form fields including golfClubId
       Object.keys(this.memberForm.value).forEach(key => {
         const value = this.memberForm.get(key)?.value;
 
@@ -249,7 +223,6 @@ export class CreateMemberComponent implements OnInit {
           } else if (key === 'idProof' && this.memberForm.get('idProof')?.value instanceof File) {
             formData.append(key, this.memberForm.get('idProof')?.value);
           } else if (key === 'dateOfBirth' || key === 'membershipStartDate' || key === 'membershipEndDate') {
-            // Ensure dates are in the correct format (YYYY-MM-DD)
             const dateValue = value ? new Date(value).toISOString().split('T')[0] : '';
             formData.append(key, dateValue);
           } else if (typeof value === 'boolean') {
@@ -271,7 +244,7 @@ export class CreateMemberComponent implements OnInit {
       if (response?.data?.code === 1) {
         await Swal.fire({
           title: 'Success!',
-          text: `Member has been created successfully with ID: ${memberId}`,
+          text: `Member has been created successfully with Golf Club ID: ${generatedMemberId}`,
           icon: 'success',
           confirmButtonText: 'Ok'
         });
@@ -284,6 +257,32 @@ export class CreateMemberComponent implements OnInit {
       await this.showError(error instanceof Error ? error.message : 'Failed to create member');
     } finally {
       this.loading = false;
+    }
+  }
+
+  // Keep existing generateMemberId method unchanged
+  private async generateMemberId(): Promise<string> {
+    try {
+      const currentDate = new Date();
+      const year = currentDate.getFullYear().toString().slice(-2);
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+
+      // Get the last member ID for the current month
+      const lastMemberId = await this.memberService.getLastMemberId(year, month);
+
+      let sequence: number;
+      if (!lastMemberId) {
+        sequence = 1;
+      } else {
+        const lastSequence = parseInt(lastMemberId.slice(-4));
+        sequence = lastSequence + 1;
+      }
+
+      const sequenceStr = sequence.toString().padStart(4, '0');
+      return `${this.CLUB_PREFIX}${year}${month}${sequenceStr}`;
+    } catch (error) {
+      console.error('Error generating member ID:', error);
+      throw new Error('Failed to generate member ID');
     }
   }
 

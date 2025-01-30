@@ -62,7 +62,7 @@ export class MemberService {
 
   async getLastMemberId(year: string, month: string): Promise<string | null> {
     try {
-      const response = await axios.get(`${this.apiUrl}/members/last-member-id/${year}/${month}`);
+      const response = await axios.get(`${this.apiUrl}member/last-member-id/${year}/${month}/`);
       return response.data?.data?.memberId || null;
     } catch (error) {
       console.error('Error fetching last member ID:', error);
