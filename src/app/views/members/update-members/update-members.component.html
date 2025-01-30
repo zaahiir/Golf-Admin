@@ -63,7 +63,7 @@
             <select cSelect id="gender" formControlName="gender" required>
               <option value="">Select Gender</option>
               <option *ngFor="let gender of genders" [value]="gender.id">
-                {{ gender.name }}
+                {{ gender.genderName }}
               </option>
             </select>
             <label cLabel for="gender" class="ms-2">Gender</label>
@@ -76,7 +76,7 @@
             <select cSelect id="nationality" formControlName="nationality" required>
               <option value="">Select Nationality</option>
               <option *ngFor="let nationality of nationalities" [value]="nationality.id">
-                {{ nationality.name }}
+                {{ nationality.countryName }}
               </option>
             </select>
             <label cLabel for="nationality" class="ms-2">Nationality</label>
@@ -97,7 +97,7 @@
             <select cSelect id="plan" formControlName="plan" required>
               <option value="">Select Plan</option>
               <option *ngFor="let plan of plans" [value]="plan.id">
-                {{ plan.name }}
+                {{ plan.planName }}
               </option>
             </select>
             <label cLabel for="plan" class="ms-2">Membership Plan</label>
@@ -131,7 +131,7 @@
             <select cSelect id="paymentStatus" formControlName="paymentStatus" required>
               <option value="">Select Payment Status</option>
               <option *ngFor="let status of paymentStatuses" [value]="status.id">
-                {{ status.name }}
+                {{ status.statusName }}
               </option>
             </select>
             <label cLabel for="paymentStatus" class="ms-2">Payment Status</label>
@@ -144,7 +144,7 @@
             <select cSelect id="paymentMethod" formControlName="paymentMethod" required>
               <option value="">Select Payment Method</option>
               <option *ngFor="let method of paymentMethods" [value]="method.id">
-                {{ method.name }}
+                {{ method.methodName }}
               </option>
             </select>
             <label cLabel for="paymentMethod" class="ms-2">Payment Method</label>

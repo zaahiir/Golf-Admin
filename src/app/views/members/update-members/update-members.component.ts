@@ -1,7 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { NgStyle, NgClass, NgForOf, NgIf, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RowComponent, ColComponent, TextColorDirective, CardComponent, CardHeaderComponent, CardBodyComponent, FormFloatingDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, ButtonDirective } from '@coreui/angular';
+import {
+  RowComponent, ColComponent, TextColorDirective, CardComponent,
+  CardHeaderComponent, CardBodyComponent, FormFloatingDirective,
+  FormDirective, FormLabelDirective, FormControlDirective,
+  FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective,
+  FormSelectDirective, ButtonDirective
+} from '@coreui/angular';
 import Swal from 'sweetalert2';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MemberService } from '../../common-service/member/member.service';
@@ -12,7 +18,7 @@ interface Member {
   lastName: string;
   email: string;
   phoneNumber: string;
-  alternatePhoneNumber: string;
+  alternatePhoneNumber?: string;
   address: string;
   dateOfBirth: string;
   gender: number;
@@ -20,15 +26,15 @@ interface Member {
   plan: number;
   golfClubId: string;
   membershipStartDate: string;
-  membershipEndDate: string;
+  membershipEndDate?: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
   emergencyContactRelation: string;
   paymentStatus: number;
   paymentMethod: number;
-  referredBy: string;
-  profilePhoto: string;
-  idProof: string;
+  referredBy?: string;
+  profilePhoto?: string;
+  idProof?: string;
   handicap: boolean;
 }
 
@@ -99,20 +105,35 @@ export class UpdateMembersComponent implements OnInit {
     private memberService: MemberService
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.initializeForm();
-    this.loadDropdownData();
-    this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.memberId = params['id'];
-        this.loadMemberData(this.memberId);
-      }
+
+    try {
+      await this.loadDropdownData();
+
+      this.route.params.subscribe(params => {
+        if (params['id']) {
+          this.memberId = params['id'];
+          this.loadMemberData(this.memberId);
+        }
+      });
+    } catch (error) {
+      console.error('Error during initialization:', error);
+      await this.showError('Failed to initialize form data.');
+    }
+  }
+
+  private async showError(message: string): Promise<void> {
+    await Swal.fire({
+      title: 'Error',
+      text: message,
+      icon: 'error',
+      confirmButtonText: 'Ok'
     });
   }
 
   private async loadDropdownData(): Promise<void> {
     try {
-      // Replace these with your actual service calls
       const [genderRes, nationalityRes, planRes, paymentStatusRes, paymentMethodRes] = await Promise.all([
         this.memberService.getGender(),
         this.memberService.getNationality(),
@@ -121,22 +142,15 @@ export class UpdateMembersComponent implements OnInit {
         this.memberService.getPaymentMethod()
       ]);
 
-      this.genders = this.transformDropdownData(genderRes.data.data, 'genderName');
-      this.nationalities = this.transformDropdownData(nationalityRes.data.data, 'countryName');
-      this.plans = this.transformDropdownData(planRes.data.data, 'planName');
-      this.paymentStatuses = this.transformDropdownData(paymentStatusRes.data.data, 'statusName');
-      this.paymentMethods = this.transformDropdownData(paymentMethodRes.data.data, 'methodName');
+      this.genders = genderRes.data.data;
+      this.nationalities = nationalityRes.data.data;
+      this.plans = planRes.data.data;
+      this.paymentStatuses = paymentStatusRes.data.data;
+      this.paymentMethods = paymentMethodRes.data.data;
     } catch (error) {
       console.error('Error loading dropdown data:', error);
       await Swal.fire('Error', 'Failed to load form data', 'error');
     }
-  }
-
-  private transformDropdownData(data: any[], nameKey: string): DropdownOption[] {
-    return data.map(item => ({
-      id: item.id,
-      name: item[nameKey]
-    }));
   }
 
   private initializeForm(): void {
@@ -173,7 +187,36 @@ export class UpdateMembersComponent implements OnInit {
       const response = await this.memberService.listMember(id);
       if (response?.data?.data?.[0]) {
         const memberData = response.data.data[0];
-        this.patchFormValues(memberData);
+
+        // Find matching IDs from the arrays
+        const gender = this.genders.find(g => g.genderName === memberData.gender)?.id;
+        const nationality = this.nationalities.find(n => n.countryName === memberData.nationality)?.id;
+        const plan = this.plans.find(p => p.planName === memberData.plan)?.id;
+        const paymentStatus = this.paymentStatuses.find(s => s.statusName === memberData.paymentStatus)?.id;
+        const paymentMethod = this.paymentMethods.find(m => m.methodName === memberData.paymentMethod)?.id;
+
+        this.memberForm.patchValue({
+          firstName: memberData.firstName,
+          lastName: memberData.lastName,
+          email: memberData.email,
+          phoneNumber: memberData.phoneNumber,
+          alternatePhoneNumber: memberData.alternatePhoneNumber,
+          address: memberData.address,
+          dateOfBirth: memberData.dateOfBirth,
+          gender: gender,
+          nationality: nationality,
+          plan: plan,
+          golfClubId: memberData.golfClubId,
+          membershipStartDate: memberData.membershipStartDate,
+          membershipEndDate: memberData.membershipEndDate,
+          emergencyContactName: memberData.emergencyContactName,
+          emergencyContactPhone: memberData.emergencyContactPhone,
+          emergencyContactRelation: memberData.emergencyContactRelation,
+          paymentStatus: paymentStatus,
+          paymentMethod: paymentMethod,
+          referredBy: memberData.referredBy,
+          handicap: memberData.handicap
+        });
 
         // Store existing file paths
         this.existingProfilePhoto = memberData.profilePhoto;
@@ -191,31 +234,6 @@ export class UpdateMembersComponent implements OnInit {
       console.error('Error loading member data:', error);
       await Swal.fire('Error', 'Failed to load member data', 'error');
     }
-  }
-
-  private patchFormValues(data: Member): void {
-    this.memberForm.patchValue({
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      phoneNumber: data.phoneNumber,
-      alternatePhoneNumber: data.alternatePhoneNumber,
-      address: data.address,
-      dateOfBirth: data.dateOfBirth,
-      gender: data.gender,
-      nationality: data.nationality,
-      plan: data.plan,
-      golfClubId: data.golfClubId,
-      membershipStartDate: data.membershipStartDate,
-      membershipEndDate: data.membershipEndDate,
-      emergencyContactName: data.emergencyContactName,
-      emergencyContactPhone: data.emergencyContactPhone,
-      emergencyContactRelation: data.emergencyContactRelation,
-      paymentStatus: data.paymentStatus,
-      paymentMethod: data.paymentMethod,
-      referredBy: data.referredBy,
-      handicap: data.handicap
-    });
   }
 
   onFileSelected(event: any, type: 'profile' | 'idProof'): void {
@@ -257,10 +275,6 @@ export class UpdateMembersComponent implements OnInit {
       this.existingIdProof = null;
       this.memberForm.patchValue({ idProof: '' });
     }
-  }
-
-  get f() {
-    return this.memberForm.controls;
   }
 
   async onSubmit(): Promise<void> {
