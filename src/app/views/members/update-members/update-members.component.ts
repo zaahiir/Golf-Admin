@@ -110,6 +110,72 @@ export class UpdateMembersComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
+      this.route.params.subscribe(params => {
+        this.memberId = params['id'];
+        this.loadMemberData(this.memberId);
+      });
+    } catch (error) {
+      await this.showError('An error occurred during initialization.');
+    }
+  }
+
+  async loadGenders(): Promise<void> {
+    try {
+      const response = await this.memberService.getGender();
+      if (response?.data) {
+        this.genders = response.data;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async loadNationalities(): Promise<void> {
+    try {
+      const response = await this.memberService.getNationality();
+      if (response?.data) {
+        this.nationalities = response.data;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async loadPlans(): Promise<void> {
+    try {
+      const response = await this.memberService.getPlan();
+      if (response?.data) {
+        this.plans = response.data;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async loadPaymentStatuses(): Promise<void> {
+    try {
+      const response = await this.memberService.getPaymentStatus();
+      if (response?.data) {
+        this.paymentStatuses = response.data;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async loadPaymentMethods(): Promise<void> {
+    try {
+      const response = await this.memberService.getPaymentMethod();
+      if (response?.data) {
+        this.paymentMethods = response.data;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async loadMemberData(memberId: string): Promise<void> {
+    try {
       await Promise.all([
         this.loadGenders(),
         this.loadNationalities(),
@@ -118,111 +184,36 @@ export class UpdateMembersComponent implements OnInit {
         this.loadPaymentMethods()
       ]);
 
-      this.route.params.subscribe(params => {
-        if (params['id']) {
-          this.memberId = params['id'];
-          this.loadMemberData(this.memberId);
-        }
-      });
-    } catch (error) {
-      console.error('Error during initialization:', error);
-      await this.showError('An error occurred during initialization.');
-    }
-  }
-
-  async loadGenders(): Promise<void> {
-    try {
-      const response = await this.memberService.getGender();
-      if (response?.data?.code === 1) {
-        this.genders = response.data.data;
-      }
-    } catch (error) {
-      console.error('Error loading genders:', error);
-      throw error;
-    }
-  }
-
-  async loadNationalities(): Promise<void> {
-    try {
-      const response = await this.memberService.getNationality();
-      if (response?.data?.code === 1) {
-        this.nationalities = response.data.data;
-      }
-    } catch (error) {
-      console.error('Error loading nationalities:', error);
-      throw error;
-    }
-  }
-
-  async loadPlans(): Promise<void> {
-    try {
-      const response = await this.memberService.getPlan();
-      if (response?.data?.code === 1) {
-        this.plans = response.data.data;
-      }
-    } catch (error) {
-      console.error('Error loading plans:', error);
-      throw error;
-    }
-  }
-
-  async loadPaymentStatuses(): Promise<void> {
-    try {
-      const response = await this.memberService.getPaymentStatus();
-      if (response?.data?.code === 1) {
-        this.paymentStatuses = response.data.data;
-      }
-    } catch (error) {
-      console.error('Error loading payment statuses:', error);
-      throw error;
-    }
-  }
-
-  async loadPaymentMethods(): Promise<void> {
-    try {
-      const response = await this.memberService.getPaymentMethod();
-      if (response?.data?.code === 1) {
-        this.paymentMethods = response.data.data;
-      }
-    } catch (error) {
-      console.error('Error loading payment methods:', error);
-      throw error;
-    }
-  }
-
-  async loadMemberData(memberId: string): Promise<void> {
-    try {
       const response = await this.memberService.listMember(memberId);
-      if (response.data.code === 1 && response.data.data.length > 0) {
+      if (response?.data?.code === 1 && response.data.data?.length > 0) {
         const memberData = response.data.data[0];
 
-        // Find the matching IDs from the arrays based on names
-        const gender = this.genders.find(g => g.genderName === memberData.gender)?.id;
-        const nationality = this.nationalities.find(n => n.countryName === memberData.nationality)?.id;
-        const plan = this.plans.find(p => p.planName === memberData.plan)?.id;
-        const paymentStatus = this.paymentStatuses.find(s => s.statusName === memberData.paymentStatus)?.id;
-        const paymentMethod = this.paymentMethods.find(m => m.methodName === memberData.paymentMethod)?.id;
+        const genderId = this.genders.find(g => g.genderName.toLowerCase() === memberData.gender.toLowerCase())?.id;
+        const nationalityId = this.nationalities.find(n => n.countryName.toLowerCase() === memberData.nationality.toLowerCase())?.id;
+        const planId = this.plans.find(p => p.planName.toLowerCase() === memberData.plan.toLowerCase())?.id;
+        const paymentStatusId = this.paymentStatuses.find(s => s.statusName.toLowerCase() === memberData.paymentStatus.toLowerCase())?.id;
+        const paymentMethodId = this.paymentMethods.find(m => m.methodName.toLowerCase() === memberData.paymentMethod.toLowerCase())?.id;
 
         this.memberForm.patchValue({
           firstName: memberData.firstName,
           lastName: memberData.lastName,
           email: memberData.email,
           phoneNumber: memberData.phoneNumber,
-          alternatePhoneNumber: memberData.alternatePhoneNumber,
+          alternatePhoneNumber: memberData.alternatePhoneNumber || '',
           address: memberData.address,
           dateOfBirth: memberData.dateOfBirth,
-          gender: gender,
-          nationality: nationality,
-          plan: plan,
+          gender: genderId,
+          nationality: nationalityId,
+          plan: planId,
           golfClubId: memberData.golfClubId,
           membershipStartDate: memberData.membershipStartDate,
           membershipEndDate: memberData.membershipEndDate,
           emergencyContactName: memberData.emergencyContactName,
           emergencyContactPhone: memberData.emergencyContactPhone,
           emergencyContactRelation: memberData.emergencyContactRelation,
-          paymentStatus: paymentStatus,
-          paymentMethod: paymentMethod,
-          referredBy: memberData.referredBy,
+          paymentStatus: paymentStatusId,
+          paymentMethod: paymentMethodId,
+          referredBy: memberData.referredBy || '',
           handicap: memberData.handicap
         });
 
@@ -236,7 +227,6 @@ export class UpdateMembersComponent implements OnInit {
         }
       }
     } catch (error) {
-      console.error('Error loading member data:', error);
       await this.showError('Failed to load member data.');
     }
   }
@@ -318,7 +308,6 @@ export class UpdateMembersComponent implements OnInit {
         throw new Error(response?.data?.message || 'Failed to update member');
       }
     } catch (error) {
-      console.error('Error updating member:', error);
       await this.showError("An error occurred while updating the member.");
     } finally {
       this.loading = false;
