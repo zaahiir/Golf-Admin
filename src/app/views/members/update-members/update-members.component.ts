@@ -54,16 +54,15 @@ export class UpdateMembersComponent implements OnInit {
   memberForm!: FormGroup;
   loading = false;
   submitted = false;
+  customStylesValidated = false;
   memberId: string = '';
 
-  // Dropdown options
   genders: Gender[] = [];
   nationalities: Country[] = [];
   plans: Plan[] = [];
   paymentStatuses: PaymentStatus[] = [];
   paymentMethods: PaymentMethod[] = [];
 
-  // File handling
   profilePhotoFile: File | null = null;
   idProofFile: File | null = null;
   profilePhotoPreview: string | ArrayBuffer | null = null;
@@ -72,28 +71,20 @@ export class UpdateMembersComponent implements OnInit {
   existingIdProof: string | null = null;
 
   constructor(
-    private formBuilder: FormBuilder,
+    private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
     private memberService: MemberService
-  ) {}
-
-  ngOnInit(): void {
+  ) {
     this.initializeForm();
-    this.loadDropdownData();
-
-    this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.memberId = params['id'];
-        this.loadMemberData(this.memberId);
-      }
-    });
   }
+
+  get f() { return this.memberForm.controls; }
 
   private initializeForm(): void {
     const currentDate = new Date().toISOString().split('T')[0];
 
-    this.memberForm = this.formBuilder.group({
+    this.memberForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
@@ -117,41 +108,92 @@ export class UpdateMembersComponent implements OnInit {
     });
   }
 
-  private async loadDropdownData(): Promise<void> {
+  async ngOnInit(): Promise<void> {
     try {
-      const [genderRes, nationalityRes, planRes, paymentStatusRes, paymentMethodRes] = await Promise.all([
-        this.memberService.getGender(),
-        this.memberService.getNationality(),
-        this.memberService.getPlan(),
-        this.memberService.getPaymentStatus(),
-        this.memberService.getPaymentMethod()
+      await Promise.all([
+        this.loadGenders(),
+        this.loadNationalities(),
+        this.loadPlans(),
+        this.loadPaymentStatuses(),
+        this.loadPaymentMethods()
       ]);
 
-      if (genderRes?.data?.code === 1) {
-        this.genders = genderRes.data.data;
-      }
-      if (nationalityRes?.data?.code === 1) {
-        this.nationalities = nationalityRes.data.data;
-      }
-      if (planRes?.data?.code === 1) {
-        this.plans = planRes.data.data;
-      }
-      if (paymentStatusRes?.data?.code === 1) {
-        this.paymentStatuses = paymentStatusRes.data.data;
-      }
-      if (paymentMethodRes?.data?.code === 1) {
-        this.paymentMethods = paymentMethodRes.data.data;
-      }
+      this.route.params.subscribe(params => {
+        if (params['id']) {
+          this.memberId = params['id'];
+          this.loadMemberData(this.memberId);
+        }
+      });
     } catch (error) {
-      console.error('Error loading dropdown data:', error);
-      await this.showError('Failed to load form data');
+      console.error('Error during initialization:', error);
+      await this.showError('An error occurred during initialization.');
     }
   }
 
-  private async loadMemberData(id: string): Promise<void> {
+  async loadGenders(): Promise<void> {
     try {
-      const response = await this.memberService.listMember(id);
-      if (response?.data?.code === 1 && response?.data?.data?.length > 0) {
+      const response = await this.memberService.getGender();
+      if (response?.data?.code === 1) {
+        this.genders = response.data.data;
+      }
+    } catch (error) {
+      console.error('Error loading genders:', error);
+      throw error;
+    }
+  }
+
+  async loadNationalities(): Promise<void> {
+    try {
+      const response = await this.memberService.getNationality();
+      if (response?.data?.code === 1) {
+        this.nationalities = response.data.data;
+      }
+    } catch (error) {
+      console.error('Error loading nationalities:', error);
+      throw error;
+    }
+  }
+
+  async loadPlans(): Promise<void> {
+    try {
+      const response = await this.memberService.getPlan();
+      if (response?.data?.code === 1) {
+        this.plans = response.data.data;
+      }
+    } catch (error) {
+      console.error('Error loading plans:', error);
+      throw error;
+    }
+  }
+
+  async loadPaymentStatuses(): Promise<void> {
+    try {
+      const response = await this.memberService.getPaymentStatus();
+      if (response?.data?.code === 1) {
+        this.paymentStatuses = response.data.data;
+      }
+    } catch (error) {
+      console.error('Error loading payment statuses:', error);
+      throw error;
+    }
+  }
+
+  async loadPaymentMethods(): Promise<void> {
+    try {
+      const response = await this.memberService.getPaymentMethod();
+      if (response?.data?.code === 1) {
+        this.paymentMethods = response.data.data;
+      }
+    } catch (error) {
+      console.error('Error loading payment methods:', error);
+      throw error;
+    }
+  }
+
+  async loadMemberData(memberId: string): Promise<void> {
+    try {
+      const response = await this.memberService.listMember(memberId);
+      if (response.data.code === 1 && response.data.data.length > 0) {
         const memberData = response.data.data[0];
 
         // Find the matching IDs from the arrays based on names
@@ -184,7 +226,6 @@ export class UpdateMembersComponent implements OnInit {
           handicap: memberData.handicap
         });
 
-        // Handle existing files
         if (memberData.profilePhoto) {
           this.existingProfilePhoto = memberData.profilePhoto;
           this.profilePhotoPreview = memberData.profilePhoto;
@@ -196,7 +237,7 @@ export class UpdateMembersComponent implements OnInit {
       }
     } catch (error) {
       console.error('Error loading member data:', error);
-      await this.showError('Failed to load member data');
+      await this.showError('Failed to load member data.');
     }
   }
 
@@ -238,21 +279,21 @@ export class UpdateMembersComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
+    this.customStylesValidated = true;
     this.submitted = true;
 
     if (this.memberForm.invalid) {
-      Object.keys(this.memberForm.controls).forEach(key => {
-        const control = this.memberForm.get(key);
-        if (control?.invalid) {
+      Object.values(this.memberForm.controls).forEach(control => {
+        if (control.invalid) {
           control.markAsTouched();
         }
       });
       return;
     }
 
-    try {
-      this.loading = true;
+    this.loading = true;
 
+    try {
       const formData = new FormData();
       Object.keys(this.memberForm.value).forEach(key => {
         const value = this.memberForm.get(key)?.value;
@@ -261,7 +302,6 @@ export class UpdateMembersComponent implements OnInit {
         }
       });
 
-      // Handle file uploads
       if (this.profilePhotoFile) {
         formData.append('profilePhoto', this.profilePhotoFile);
       }
@@ -272,14 +312,14 @@ export class UpdateMembersComponent implements OnInit {
       const response = await this.memberService.processMember(formData, this.memberId);
 
       if (response?.data?.code === 1) {
-        await Swal.fire('Success', 'Member updated successfully', 'success');
+        await Swal.fire("Updated!", response.data.message, "success");
         this.router.navigate(['/members']);
       } else {
         throw new Error(response?.data?.message || 'Failed to update member');
       }
     } catch (error) {
       console.error('Error updating member:', error);
-      await this.showError('Failed to update member');
+      await this.showError("An error occurred while updating the member.");
     } finally {
       this.loading = false;
     }
