@@ -9,12 +9,10 @@ import { Router } from '@angular/router';
   selector: 'app-create-courses',
   standalone: true,
   imports: [
-    NgIf, CommonModule, NgClass, NgForOf, RowComponent, ColComponent,
+    NgIf, CommonModule, RowComponent, ColComponent,
     TextColorDirective, CardComponent, FormFloatingDirective, CardHeaderComponent,
     CardBodyComponent, ReactiveFormsModule, FormsModule, FormDirective,
-    FormLabelDirective, FormControlDirective, FormFeedbackComponent,
-    InputGroupComponent, InputGroupTextDirective, FormSelectDirective,
-    ButtonDirective
+    FormLabelDirective, FormControlDirective, FormFeedbackComponent, ButtonDirective
   ],
    templateUrl: './create-courses.component.html',
   styleUrl: './create-courses.component.scss'
@@ -52,8 +50,8 @@ export class CreateCoursesComponent implements OnInit {
     });
   }
 
-  get f() { 
-    return this.golfCourseForm.controls; 
+  get f() {
+    return this.golfCourseForm.controls;
   }
 
   async onSubmit(): Promise<void> {
@@ -68,7 +66,7 @@ export class CreateCoursesComponent implements OnInit {
 
       // Add your API call here to save the golf course data
       // const response = await this.golfCourseService.createGolfCourse(this.golfCourseForm.value);
-      
+
       await Swal.fire({
         title: 'Success!',
         text: 'Golf course has been created successfully',
