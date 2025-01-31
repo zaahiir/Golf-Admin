@@ -1,20 +1,44 @@
 import { Component, OnInit } from '@angular/core';
 import { NgStyle, NgClass, NgForOf, NgIf, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RowComponent, ColComponent, TextColorDirective, CardComponent, CardHeaderComponent, CardBodyComponent, FormFloatingDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, ButtonDirective } from '@coreui/angular';
-import Swal from 'sweetalert2';
+import {
+  CardComponent,
+  CardHeaderComponent,
+  CardBodyComponent,
+  FormFloatingDirective,
+  FormDirective,
+  FormLabelDirective,
+  FormControlDirective,
+  FormFeedbackComponent,
+  ButtonDirective,
+  RowComponent,
+  ColComponent
+} from '@coreui/angular';
+import { BlogService } from '../../common-service/blog/blog.service';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-create-blog',
   standalone: true,
   imports: [
-    NgIf, CommonModule, NgClass, NgForOf, RowComponent, ColComponent,
-    TextColorDirective, CardComponent, FormFloatingDirective, CardHeaderComponent,
-    CardBodyComponent, ReactiveFormsModule, FormsModule, FormDirective,
-    FormLabelDirective, FormControlDirective, FormFeedbackComponent,
-    InputGroupComponent, InputGroupTextDirective, FormSelectDirective,
-    ButtonDirective
+    NgIf,
+    CommonModule,
+    NgClass,
+    NgForOf,
+    ReactiveFormsModule,
+    FormsModule,
+    CardComponent,
+    CardHeaderComponent,
+    CardBodyComponent,
+    FormFloatingDirective,
+    FormDirective,
+    FormLabelDirective,
+    FormControlDirective,
+    FormFeedbackComponent,
+    ButtonDirective,
+    RowComponent,
+    ColComponent
   ],
   templateUrl: './create-blog.component.html',
   styleUrl: './create-blog.component.scss'
@@ -23,9 +47,11 @@ export class CreateBlogComponent implements OnInit {
   blogForm!: FormGroup;
   loading = false;
   submitted = false;
+  selectedFile: File | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
+    private blogService: BlogService,
     private router: Router
   ) {}
 
@@ -35,18 +61,19 @@ export class CreateBlogComponent implements OnInit {
 
   private initializeForm(): void {
     this.blogForm = this.formBuilder.group({
-      blogTitle: ['', [Validators.required, Validators.minLength(5)]],
-      blogAuthor: ['', [Validators.required, Validators.minLength(3)]],
+      blogTitle: ['', [Validators.required, Validators.minLength(3)]],
       blogDate: ['', [Validators.required]],
-      blogCategory: ['', [Validators.required, Validators.minLength(3)]],
-      blogContent: ['', [Validators.required, Validators.minLength(100)]],
-      blogTags: ['', [Validators.required, Validators.minLength(3)]],
+      blogDescription: ['', [Validators.required, Validators.minLength(10)]],
       blogImage: ['']
     });
   }
 
-  get f() { 
-    return this.blogForm.controls; 
+  onFileChange(event: Event): void {
+    const element = event.target as HTMLInputElement;
+    const file = element.files?.[0];
+    if (file) {
+      this.selectedFile = file;
+    }
   }
 
   async onSubmit(): Promise<void> {
@@ -58,10 +85,22 @@ export class CreateBlogComponent implements OnInit {
 
     try {
       this.loading = true;
+      const formData = new FormData();
 
-      // Add your API call here to save the blog data
-      // const response = await this.blogService.createBlog(this.blogForm.value);
-      
+      // Append form fields to FormData
+      Object.keys(this.blogForm.value).forEach(key => {
+        if (key !== 'blogImage') {
+          formData.append(key, this.blogForm.value[key]);
+        }
+      });
+
+      // Append file if selected
+      if (this.selectedFile) {
+        formData.append('blogImage', this.selectedFile);
+      }
+
+      await this.blogService.processBlog(formData);
+
       await Swal.fire({
         title: 'Success!',
         text: 'Blog post has been created successfully',
@@ -86,6 +125,7 @@ export class CreateBlogComponent implements OnInit {
   onReset(): void {
     this.submitted = false;
     this.blogForm.reset();
+    this.selectedFile = null;
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -98,7 +138,9 @@ export class CreateBlogComponent implements OnInit {
     if (!control || !control.errors) return '';
 
     if (control.errors['required']) return 'This field is required';
-    if (control.errors['minlength']) return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
+    if (control.errors['minlength']) {
+      return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
+    }
 
     return 'Invalid input';
   }
