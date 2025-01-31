@@ -1,53 +1,120 @@
 import { Component, OnInit } from '@angular/core';
 import { NgStyle, NgClass, NgForOf, NgIf, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RowComponent, ColComponent, TextColorDirective, CardComponent, CardHeaderComponent, CardBodyComponent, FormFloatingDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, ButtonDirective } from '@coreui/angular';
+import {
+  RowComponent,
+  ColComponent,
+  TextColorDirective,
+  CardComponent,
+  CardHeaderComponent,
+  CardBodyComponent,
+  FormFloatingDirective,
+  FormDirective,
+  FormLabelDirective,
+  FormControlDirective,
+  FormFeedbackComponent,
+  ButtonDirective
+} from '@coreui/angular';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
+import { CourseService } from '../../common-service/course/course.service';
+
+interface Amenity {
+  id: number;
+  amenityName: string;
+}
 
 @Component({
   selector: 'app-create-courses',
   standalone: true,
   imports: [
-    NgIf, CommonModule, RowComponent, ColComponent,
-    TextColorDirective, CardComponent, FormFloatingDirective, CardHeaderComponent,
-    CardBodyComponent, ReactiveFormsModule, FormsModule, FormDirective,
-    FormLabelDirective, FormControlDirective, FormFeedbackComponent, ButtonDirective
+    NgIf,
+    CommonModule,
+    RowComponent,
+    ColComponent,
+    TextColorDirective,
+    CardComponent,
+    FormFloatingDirective,
+    CardHeaderComponent,
+    CardBodyComponent,
+    ReactiveFormsModule,
+    FormsModule,
+    FormDirective,
+    FormLabelDirective,
+    FormControlDirective,
+    FormFeedbackComponent,
+    ButtonDirective
   ],
-   templateUrl: './create-courses.component.html',
-  styleUrl: './create-courses.component.scss'
+  templateUrl: './create-courses.component.html',
+  styleUrls: ['./create-courses.component.scss']
 })
 export class CreateCoursesComponent implements OnInit {
   golfCourseForm!: FormGroup;
   loading = false;
   submitted = false;
+  amenitiesList: Amenity[] = [];
 
   constructor(
     private formBuilder: FormBuilder,
-    private router: Router
+    private router: Router,
+    private courseService: CourseService
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
+    this.loadAmenities();
+  }
+
+  private async loadAmenities(): Promise<void> {
+    try {
+      const response = await this.courseService.getAmenities();
+      this.amenitiesList = response.data.data || [];
+    } catch (error) {
+      console.error('Error loading amenities:', error);
+      await Swal.fire({
+        title: 'Error!',
+        text: 'Failed to load amenities',
+        icon: 'error',
+        confirmButtonText: 'Ok'
+      });
+    }
   }
 
   private initializeForm(): void {
     this.golfCourseForm = this.formBuilder.group({
       courseName: ['', [Validators.required, Validators.minLength(2)]],
-      courseAddress: ['', [Validators.required, Validators.minLength(5)]],
-      courseCity: ['', [Validators.required, Validators.minLength(2)]],
-      courseState: ['', [Validators.required, Validators.minLength(2)]],
-      courseZipCode: ['', [Validators.required, Validators.pattern('^[0-9]{5}(?:-[0-9]{4})?$')]],
-      courseCountry: ['', [Validators.required, Validators.minLength(2)]],
-      coursePar: ['', [Validators.required, Validators.min(0)]],
-      courseYardage: ['', [Validators.required, Validators.min(0)]],
-      courseRating: ['', [Validators.required, Validators.min(0), Validators.max(155)]],
-      courseSlopeRating: ['', [Validators.required, Validators.min(0), Validators.max(155)]],
-      courseClubhouse: ['', [Validators.required, Validators.minLength(2)]],
-      coursePracticeRange: ['', [Validators.required, Validators.minLength(2)]],
-      courseProShop: ['', [Validators.required, Validators.minLength(2)]],
-      courseRestaurant: ['', [Validators.required, Validators.minLength(2)]]
+      courseNumber: ['', [Validators.required]],
+      streetName: ['', [Validators.required, Validators.minLength(2)]],
+      locality: ['', [Validators.required]],
+      town: ['', [Validators.required]],
+      postcode: ['', [Validators.required, Validators.pattern('^[0-9A-Za-z]{1,10}$')]],
+      country: ['', [Validators.required]],
+      phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9+]{1,20}$')]],
+      website: ['', [Validators.pattern('^https?://.*$')]],
+      selectedAmenities: [[], [Validators.required, Validators.minLength(1)]],
+      golfDescription: [''],
+      golfLocation: ['', [Validators.required]],
+      hideStatus: [0]
     });
+  }
+
+  isAmenitySelected(amenity: string): boolean {
+    const selectedAmenities = this.golfCourseForm.get('selectedAmenities')?.value || [];
+    return selectedAmenities.includes(amenity);
+  }
+
+  toggleAmenity(amenity: string): void {
+    const selectedAmenities = [...(this.golfCourseForm.get('selectedAmenities')?.value || [])];
+    const index = selectedAmenities.indexOf(amenity);
+
+    if (index === -1) {
+      selectedAmenities.push(amenity);
+    } else {
+      selectedAmenities.splice(index, 1);
+    }
+
+    this.golfCourseForm.patchValue({ selectedAmenities });
+    this.golfCourseForm.get('selectedAmenities')?.markAsTouched();
   }
 
   get f() {
@@ -64,17 +131,31 @@ export class CreateCoursesComponent implements OnInit {
     try {
       this.loading = true;
 
-      // Add your API call here to save the golf course data
-      // const response = await this.golfCourseService.createGolfCourse(this.golfCourseForm.value);
+      // Get the selected amenities IDs from the amenitiesList
+      const selectedAmenityNames = this.golfCourseForm.get('selectedAmenities')?.value || [];
+      const selectedAmenityIds = this.amenitiesList
+        .filter(a => selectedAmenityNames.includes(a.amenityName))
+        .map(a => a.id);
 
-      await Swal.fire({
-        title: 'Success!',
-        text: 'Golf course has been created successfully',
-        icon: 'success',
-        confirmButtonText: 'Ok'
-      });
+      // Prepare form data with amenities ID
+      const formData = {
+        ...this.golfCourseForm.value,
+        amenities: selectedAmenityIds[0] // Using first selected amenity as per backend model
+      };
 
-      this.router.navigate(['/golf-courses']);
+      const response = await this.courseService.processCourse(formData);
+
+      if (response.data.code === 1) {
+        await Swal.fire({
+          title: 'Success!',
+          text: 'Golf course has been created successfully',
+          icon: 'success',
+          confirmButtonText: 'Ok'
+        });
+        this.router.navigate(['/golf-courses']);
+      } else {
+        throw new Error(response.data.message);
+      }
     } catch (error) {
       console.error('Error creating golf course:', error);
       await Swal.fire({
@@ -90,7 +171,10 @@ export class CreateCoursesComponent implements OnInit {
 
   onReset(): void {
     this.submitted = false;
-    this.golfCourseForm.reset();
+    this.golfCourseForm.reset({
+      hideStatus: 0,
+      selectedAmenities: []
+    });
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -103,11 +187,24 @@ export class CreateCoursesComponent implements OnInit {
     if (!control || !control.errors) return '';
 
     if (control.errors['required']) return 'This field is required';
-    if (control.errors['minlength']) return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
-    if (control.errors['pattern']) return 'Invalid format';
-    if (control.errors['min']) return `Minimum value is ${control.errors['min'].min}`;
-    if (control.errors['max']) return `Maximum value is ${control.errors['max'].max}`;
-
+    if (control.errors['minlength']) {
+      if (fieldName === 'selectedAmenities') {
+        return 'Please select at least one amenity';
+      }
+      return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
+    }
+    if (control.errors['pattern']) {
+      switch (fieldName) {
+        case 'postcode':
+          return 'Invalid postcode format';
+        case 'phoneNumber':
+          return 'Invalid phone number format';
+        case 'website':
+          return 'Invalid website URL';
+        default:
+          return 'Invalid format';
+      }
+    }
     return 'Invalid input';
   }
 }

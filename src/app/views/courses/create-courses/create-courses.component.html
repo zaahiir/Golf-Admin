@@ -1,137 +1,131 @@
 <c-row ngPreserveWhitespaces>
-    <c-col xs="12">
-      <c-card class="mb-4">
-        <c-card-header>
-          <strong>New Golf Course</strong>
-        </c-card-header>
-        <c-card-body>
-          <form [formGroup]="golfCourseForm" (ngSubmit)="onSubmit()" cForm class="row g-3 needs-validation">
-            <!-- Basic Information -->
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseName" formControlName="courseName" required type="text" placeholder="Course Name" />
-              <label cLabel for="courseName" class="ms-2">Course Name</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseName')">
-                {{ getErrorMessage('courseName') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseAddress" formControlName="courseAddress" required type="text" placeholder="Course Address" />
-              <label cLabel for="courseAddress" class="ms-2">Course Address</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseAddress')">
-                {{ getErrorMessage('courseAddress') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseCity" formControlName="courseCity" required type="text" placeholder="City" />
-              <label cLabel for="courseCity" class="ms-2">City</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseCity')">
-                {{ getErrorMessage('courseCity') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseState" formControlName="courseState" required type="text" placeholder="State" />
-              <label cLabel for="courseState" class="ms-2">State</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseState')">
-                {{ getErrorMessage('courseState') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseZipCode" formControlName="courseZipCode" required type="text" placeholder="Zip Code" />
-              <label cLabel for="courseZipCode" class="ms-2">Zip Code</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseZipCode')">
-                {{ getErrorMessage('courseZipCode') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseCountry" formControlName="courseCountry" required type="text" placeholder="Country" />
-              <label cLabel for="courseCountry" class="ms-2">Country</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseCountry')">
-                {{ getErrorMessage('courseCountry') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <!-- Course Details -->
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="coursePar" formControlName="coursePar" required type="number" min="0" placeholder="Course Par" />
-              <label cLabel for="coursePar" class="ms-2">Course Par</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('coursePar')">
-                {{ getErrorMessage('coursePar') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseYardage" formControlName="courseYardage" required type="number" min="0" placeholder="Course Yardage" />
-              <label cLabel for="courseYardage" class="ms-2">Course Yardage</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseYardage')">
-                {{ getErrorMessage('courseYardage') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseRating" formControlName="courseRating" required type="number" step="0.1" min="0" placeholder="Course Rating" />
-              <label cLabel for="courseRating" class="ms-2">Course Rating</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseRating')">
-                {{ getErrorMessage('courseRating') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseSlopeRating" formControlName="courseSlopeRating" required type="number" min="0" placeholder="Course Slope Rating" />
-              <label cLabel for="courseSlopeRating" class="ms-2">Course Slope Rating</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseSlopeRating')">
-                {{ getErrorMessage('courseSlopeRating') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <!-- Course Amenities -->
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseClubhouse" formControlName="courseClubhouse" required type="text" placeholder="Clubhouse" />
-              <label cLabel for="courseClubhouse" class="ms-2">Clubhouse</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseClubhouse')">
-                {{ getErrorMessage('courseClubhouse') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="coursePracticeRange" formControlName="coursePracticeRange" required type="text" placeholder="Practice Range" />
-              <label cLabel for="coursePracticeRange" class="ms-2">Practice Range</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('coursePracticeRange')">
-                {{ getErrorMessage('coursePracticeRange') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseProShop" formControlName="courseProShop" required type="text" placeholder="Pro Shop" />
-              <label cLabel for="courseProShop" class="ms-2">Pro Shop</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseProShop')">
-                {{ getErrorMessage('courseProShop') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <c-col [cFormFloating]="true" md="6">
-              <input cFormControl id="courseRestaurant" formControlName="courseRestaurant" required type="text" placeholder="Restaurant" />
-              <label cLabel for="courseRestaurant" class="ms-2">Restaurant</label>
-              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseRestaurant')">
-                {{ getErrorMessage('courseRestaurant') }}
-              </c-form-feedback>
-            </c-col>
-  
-            <!-- Form Actions -->
-            <c-col xs="12">
-              <button cButton class="me-1" color="primary" type="submit" [disabled]="loading">
-                {{ loading ? 'Saving...' : 'Save Golf Course' }}
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header>
+        <strong>New Golf Course</strong>
+      </c-card-header>
+      <c-card-body>
+        <form [formGroup]="golfCourseForm" (ngSubmit)="onSubmit()" cForm class="row g-3 needs-validation">
+          <!-- Basic Information -->
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="courseName" formControlName="courseName" type="text" placeholder="Course Name" />
+            <label cLabel for="courseName" class="ms-2">Course Name</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseName')">
+              {{ getErrorMessage('courseName') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="courseNumber" formControlName="courseNumber" type="text" placeholder="Course Number" />
+            <label cLabel for="courseNumber" class="ms-2">Course Number</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('courseNumber')">
+              {{ getErrorMessage('courseNumber') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="streetName" formControlName="streetName" type="text" placeholder="Street Name" />
+            <label cLabel for="streetName" class="ms-2">Street Name</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('streetName')">
+              {{ getErrorMessage('streetName') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="locality" formControlName="locality" type="text" placeholder="Locality" />
+            <label cLabel for="locality" class="ms-2">Locality</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('locality')">
+              {{ getErrorMessage('locality') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="town" formControlName="town" type="text" placeholder="Town" />
+            <label cLabel for="town" class="ms-2">Town</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('town')">
+              {{ getErrorMessage('town') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="postcode" formControlName="postcode" type="text" placeholder="Postcode" />
+            <label cLabel for="postcode" class="ms-2">Postcode</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('postcode')">
+              {{ getErrorMessage('postcode') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="country" formControlName="country" type="text" placeholder="Country" />
+            <label cLabel for="country" class="ms-2">Country</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('country')">
+              {{ getErrorMessage('country') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="phoneNumber" formControlName="phoneNumber" type="text" placeholder="Phone Number" />
+            <label cLabel for="phoneNumber" class="ms-2">Phone Number</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('phoneNumber')">
+              {{ getErrorMessage('phoneNumber') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="website" formControlName="website" type="url" placeholder="Website" />
+            <label cLabel for="website" class="ms-2">Website</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('website')">
+              {{ getErrorMessage('website') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col md="12">
+            <label cLabel>Amenities</label>
+            <div class="amenities-container">
+              <button
+                *ngFor="let amenity of amenitiesList"
+                cButton
+                [color]="isAmenitySelected(amenity.amenityName) ? 'primary' : 'secondary'"
+                (click)="toggleAmenity(amenity.amenityName)"
+                class="me-2 mb-2"
+                variant="outline"
+                type="button"
+              >
+                {{ amenity.amenityName }}
               </button>
-              <button (click)="onReset()" cButton color="secondary" type="button" [disabled]="loading">
-                Reset Form
-              </button>
-            </c-col>
-          </form>
-        </c-card-body>
-      </c-card>
-    </c-col>
-  </c-row>
+            </div>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('selectedAmenities')">
+              {{ getErrorMessage('selectedAmenities') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="12">
+            <textarea cFormControl id="golfDescription" formControlName="golfDescription" placeholder="Description" rows="3"></textarea>
+            <label cLabel for="golfDescription" class="ms-2">Description</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('golfDescription')">
+              {{ getErrorMessage('golfDescription') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="12">
+            <input cFormControl id="golfLocation" formControlName="golfLocation" type="text" placeholder="Location" />
+            <label cLabel for="golfLocation" class="ms-2">Location</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('golfLocation')">
+              {{ getErrorMessage('golfLocation') }}
+            </c-form-feedback>
+          </c-col>
+
+          <!-- Form Actions -->
+          <c-col xs="12">
+            <button cButton class="me-1" color="primary" type="submit" [disabled]="loading">
+              {{ loading ? 'Saving...' : 'Save Golf Course' }}
+            </button>
+            <button (click)="onReset()" cButton color="secondary" type="button" [disabled]="loading">
+              Reset Form
+            </button>
+          </c-col>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
