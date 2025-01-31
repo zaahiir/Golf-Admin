@@ -5,7 +5,7 @@
         <strong>New Golf Course</strong>
       </c-card-header>
       <c-card-body>
-        <form [formGroup]="golfCourseForm" (ngSubmit)="onSubmit()" cForm class="row g-3 needs-validation">
+        <form [formGroup]="golfCourseForm" (ngSubmit)="onSubmit()"  #form="ngForm" cForm class="row g-3 needs-validation">
           <!-- Basic Information -->
           <c-col [cFormFloating]="true" md="6">
             <input cFormControl id="courseName" formControlName="courseName" type="text" placeholder="Course Name" />
@@ -79,6 +79,22 @@
             </c-form-feedback>
           </c-col>
 
+          <c-col [cFormFloating]="true" md="6">
+            <input cFormControl id="golfLocation" formControlName="golfLocation" type="text" placeholder="Location" />
+            <label cLabel for="golfLocation" class="ms-2">Location</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('golfLocation')">
+              {{ getErrorMessage('golfLocation') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="12">
+            <textarea cFormControl id="golfDescription" formControlName="golfDescription" placeholder="Description" rows="3"></textarea>
+            <label cLabel for="golfDescription" class="ms-2">Description</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('golfDescription')">
+              {{ getErrorMessage('golfDescription') }}
+            </c-form-feedback>
+          </c-col>
+
           <c-col md="12">
             <label cLabel>Amenities</label>
             <div class="amenities-container">
@@ -94,24 +110,8 @@
                 {{ amenity.amenityName }}
               </button>
             </div>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('selectedAmenities')">
-              {{ getErrorMessage('selectedAmenities') }}
-            </c-form-feedback>
-          </c-col>
-
-          <c-col [cFormFloating]="true" md="12">
-            <textarea cFormControl id="golfDescription" formControlName="golfDescription" placeholder="Description" rows="3"></textarea>
-            <label cLabel for="golfDescription" class="ms-2">Description</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('golfDescription')">
-              {{ getErrorMessage('golfDescription') }}
-            </c-form-feedback>
-          </c-col>
-
-          <c-col [cFormFloating]="true" md="12">
-            <input cFormControl id="golfLocation" formControlName="golfLocation" type="text" placeholder="Location" />
-            <label cLabel for="golfLocation" class="ms-2">Location</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('golfLocation')">
-              {{ getErrorMessage('golfLocation') }}
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('amenities')">
+              {{ getErrorMessage('amenities') }}
             </c-form-feedback>
           </c-col>
 

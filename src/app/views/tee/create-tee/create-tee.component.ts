@@ -27,7 +27,6 @@ import { Router } from '@angular/router';
   imports: [
     NgIf,
     CommonModule,
-    NgClass,
     NgForOf,
     RowComponent,
     ColComponent,
@@ -42,9 +41,6 @@ import { Router } from '@angular/router';
     FormLabelDirective,
     FormControlDirective,
     FormFeedbackComponent,
-    InputGroupComponent,
-    InputGroupTextDirective,
-    FormSelectDirective,
     ButtonDirective
   ],
   templateUrl: './create-tee.component.html',

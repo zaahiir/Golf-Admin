@@ -68,9 +68,8 @@ export class CreateCoursesComponent implements OnInit {
   private async loadAmenities(): Promise<void> {
     try {
       const response = await this.courseService.getAmenities();
-      this.amenitiesList = response.data.data || [];
+      this.amenitiesList = response.data || [];
     } catch (error) {
-      console.error('Error loading amenities:', error);
       await Swal.fire({
         title: 'Error!',
         text: 'Failed to load amenities',
@@ -82,16 +81,16 @@ export class CreateCoursesComponent implements OnInit {
 
   private initializeForm(): void {
     this.golfCourseForm = this.formBuilder.group({
-      courseName: ['', [Validators.required, Validators.minLength(2)]],
+      courseName: ['', [Validators.required]],
       courseNumber: ['', [Validators.required]],
-      streetName: ['', [Validators.required, Validators.minLength(2)]],
+      streetName: ['', [Validators.required]],
       locality: ['', [Validators.required]],
       town: ['', [Validators.required]],
-      postcode: ['', [Validators.required, Validators.pattern('^[0-9A-Za-z]{1,10}$')]],
+      postcode: ['', [Validators.required]],
       country: ['', [Validators.required]],
-      phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9+]{1,20}$')]],
-      website: ['', [Validators.pattern('^https?://.*$')]],
-      selectedAmenities: [[], [Validators.required, Validators.minLength(1)]],
+      phoneNumber: ['', [Validators.required]],
+      website: ['', [Validators.required]],
+      amenities: [[], [Validators.required]],
       golfDescription: [''],
       golfLocation: ['', [Validators.required]],
       hideStatus: [0]
@@ -99,12 +98,12 @@ export class CreateCoursesComponent implements OnInit {
   }
 
   isAmenitySelected(amenity: string): boolean {
-    const selectedAmenities = this.golfCourseForm.get('selectedAmenities')?.value || [];
+    const selectedAmenities = this.golfCourseForm.get('amenities')?.value || [];
     return selectedAmenities.includes(amenity);
   }
 
   toggleAmenity(amenity: string): void {
-    const selectedAmenities = [...(this.golfCourseForm.get('selectedAmenities')?.value || [])];
+    const selectedAmenities = [...(this.golfCourseForm.get('amenities')?.value || [])];
     const index = selectedAmenities.indexOf(amenity);
 
     if (index === -1) {
@@ -113,8 +112,8 @@ export class CreateCoursesComponent implements OnInit {
       selectedAmenities.splice(index, 1);
     }
 
-    this.golfCourseForm.patchValue({ selectedAmenities });
-    this.golfCourseForm.get('selectedAmenities')?.markAsTouched();
+    this.golfCourseForm.patchValue({ amenities: selectedAmenities });
+    this.golfCourseForm.get('amenities')?.markAsTouched();
   }
 
   get f() {
@@ -125,22 +124,23 @@ export class CreateCoursesComponent implements OnInit {
     this.submitted = true;
 
     if (this.golfCourseForm.invalid) {
+      Object.keys(this.golfCourseForm.controls).forEach(key => {
+        const control = this.golfCourseForm.get(key);
+        control?.markAsTouched();
+      });
       return;
     }
 
     try {
       this.loading = true;
-
-      // Get the selected amenities IDs from the amenitiesList
-      const selectedAmenityNames = this.golfCourseForm.get('selectedAmenities')?.value || [];
+      const selectedAmenityNames = this.golfCourseForm.get('amenities')?.value || [];
       const selectedAmenityIds = this.amenitiesList
         .filter(a => selectedAmenityNames.includes(a.amenityName))
         .map(a => a.id);
 
-      // Prepare form data with amenities ID
       const formData = {
         ...this.golfCourseForm.value,
-        amenities: selectedAmenityIds[0] // Using first selected amenity as per backend model
+        amenities: selectedAmenityIds[0]
       };
 
       const response = await this.courseService.processCourse(formData);
@@ -152,15 +152,14 @@ export class CreateCoursesComponent implements OnInit {
           icon: 'success',
           confirmButtonText: 'Ok'
         });
-        this.router.navigate(['/golf-courses']);
+        this.router.navigate(['/courses']);
       } else {
-        throw new Error(response.data.message);
+        throw new Error(response.data.message || 'Unknown error occurred');
       }
     } catch (error) {
-      console.error('Error creating golf course:', error);
       await Swal.fire({
         title: 'Error!',
-        text: 'Failed to create golf course',
+        text: error instanceof Error ? error.message : 'Failed to create golf course',
         icon: 'error',
         confirmButtonText: 'Ok'
       });
@@ -173,7 +172,7 @@ export class CreateCoursesComponent implements OnInit {
     this.submitted = false;
     this.golfCourseForm.reset({
       hideStatus: 0,
-      selectedAmenities: []
+      amenities: []
     });
   }
 
@@ -188,7 +187,7 @@ export class CreateCoursesComponent implements OnInit {
 
     if (control.errors['required']) return 'This field is required';
     if (control.errors['minlength']) {
-      if (fieldName === 'selectedAmenities') {
+      if (fieldName === 'amenities') {
         return 'Please select at least one amenity';
       }
       return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
