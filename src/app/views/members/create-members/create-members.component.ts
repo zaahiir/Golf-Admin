@@ -73,6 +73,7 @@ export class CreateMemberComponent implements OnInit {
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
+      password: [''],
       phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       alternatePhoneNumber: [''],
       dateOfBirth: ['', [Validators.required]],
@@ -93,6 +94,33 @@ export class CreateMemberComponent implements OnInit {
       handicap: [false],
       golfClubId: ['']
     });
+  }
+
+  private generatePassword(length: number = 12): string {
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*';
+
+    // Ensure at least one character from each category
+    let password = '';
+    password += this.getRandomChar(uppercase);
+    password += this.getRandomChar(lowercase);
+    password += this.getRandomChar(numbers);
+    password += this.getRandomChar(special);
+
+    // Fill remaining length with random characters from all categories
+    const allChars = uppercase + lowercase + numbers + special;
+    for (let i = password.length; i < length; i++) {
+      password += this.getRandomChar(allChars);
+    }
+
+    // Shuffle the password
+    return password.split('').sort(() => Math.random() - 0.5).join('');
+  }
+
+  private getRandomChar(charset: string): string {
+    return charset[Math.floor(Math.random() * charset.length)];
   }
 
   async ngOnInit(): Promise<void> {
@@ -206,17 +234,25 @@ export class CreateMemberComponent implements OnInit {
       // Generate member ID with MGC prefix
       const generatedMemberId = await this.generateMemberId();
       console.log('Generated Golf Club ID:', generatedMemberId);
+      const generatedPassword = this.generatePassword();
+
 
       // Create FormData
       const formData = new FormData();
 
       // Set the generated member ID in golfClubId field
-      this.memberForm.patchValue({ golfClubId: generatedMemberId });
+      this.memberForm.patchValue({
+        golfClubId: generatedMemberId,
+        password: generatedPassword
+      });
 
-      // Append all form fields including golfClubId
+      // Log the generated credentials (remove in production)
+      console.log('Generated Member ID:', generatedMemberId);
+      console.log('Generated Password:', generatedPassword);
+
+      // Append all form fields
       Object.keys(this.memberForm.value).forEach(key => {
         const value = this.memberForm.get(key)?.value;
-
         if (value !== null && value !== undefined) {
           if (key === 'profilePhoto' && this.selectedFile) {
             formData.append(key, this.selectedFile);
@@ -244,7 +280,7 @@ export class CreateMemberComponent implements OnInit {
       if (response?.data?.code === 1) {
         await Swal.fire({
           title: 'Success!',
-          text: `Member has been created successfully with Golf Club ID: ${generatedMemberId}`,
+          text: `Member has been created successfully with Golf Club ID: ${generatedMemberId}, Login credentials have been sent to their email.`,
           icon: 'success',
           confirmButtonText: 'Ok'
         });
