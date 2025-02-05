@@ -96,6 +96,27 @@
             </c-form-feedback>
           </c-col>
 
+          <!-- Course Image -->
+          <c-col md="12">
+            <div class="mb-1">
+              <label cLabel for="CourseImage">Course Image</label>
+              <input
+                cFormControl
+                id="Coursemage"
+                type="file"
+                accept="image/*"
+                (change)="onFileChange($event)"
+              />
+              <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('CourseImage')">
+                {{ getErrorMessage('blogImage') }}
+              </c-form-feedback>
+            </div>
+            <!-- Image Preview -->
+            <div *ngIf="imagePreview" class="mb-3">
+              <img [src]="imagePreview" class="img-thumbnail" style="max-width: 200px" alt="Preview">
+            </div>
+          </c-col>
+
           <!-- Amenities Section -->
           <c-col md="12">
             <label cLabel>Amenities</label>

@@ -56,6 +56,8 @@ export class CreateCoursesComponent implements OnInit {
   submitted = false;
   amenitiesList: Amenity[] = [];
   selectedAmenities: number[] = [];
+  imagePreview: string | null = null;
+  selectedFile: File | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -96,8 +98,48 @@ export class CreateCoursesComponent implements OnInit {
       amenities: [[], [Validators.required, Validators.minLength(1)]],
       golfDescription: [''],
       golfLocation: ['', [Validators.required]],
+      courseImage: [null],
       hideStatus: [0]
     });
+  }
+
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Please select an image file',
+          icon: 'error',
+          confirmButtonText: 'Ok'
+        });
+        return;
+      }
+
+      // Validate file size (e.g., max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Image size should not exceed 5MB',
+          icon: 'error',
+          confirmButtonText: 'Ok'
+        });
+        return;
+      }
+
+      this.selectedFile = file;
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imagePreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   isAmenitySelected(amenityId: number): boolean {
@@ -167,6 +209,8 @@ export class CreateCoursesComponent implements OnInit {
   onReset(): void {
     this.submitted = false;
     this.selectedAmenities = [];
+    this.imagePreview = null;
+    this.selectedFile = null;
     this.golfCourseForm.reset({
       hideStatus: 0,
       amenities: []
