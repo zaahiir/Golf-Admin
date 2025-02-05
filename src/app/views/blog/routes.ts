@@ -22,7 +22,7 @@ export const blogRoutes: Routes = [
         },
       },
       {
-        path: 'update',
+        path: 'update/:id',
         loadComponent: () => import('./update-blog/update-blog.component').then(m => m.UpdateBlogComponent),
         data: {
           title: 'Update Blogs'

@@ -13,7 +13,8 @@ import {
   FormLabelDirective,
   FormControlDirective,
   FormFeedbackComponent,
-  ButtonDirective
+  ButtonDirective,
+  ButtonModule
 } from '@coreui/angular';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
@@ -43,7 +44,8 @@ interface Amenity {
     FormLabelDirective,
     FormControlDirective,
     FormFeedbackComponent,
-    ButtonDirective
+    ButtonDirective,
+    ButtonModule
   ],
   templateUrl: './create-courses.component.html',
   styleUrls: ['./create-courses.component.scss']
@@ -53,6 +55,7 @@ export class CreateCoursesComponent implements OnInit {
   loading = false;
   submitted = false;
   amenitiesList: Amenity[] = [];
+  selectedAmenities: number[] = [];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -89,30 +92,28 @@ export class CreateCoursesComponent implements OnInit {
       postcode: ['', [Validators.required]],
       country: ['', [Validators.required]],
       phoneNumber: ['', [Validators.required]],
-      website: ['', [Validators.required]],
-      amenities: [[], [Validators.required]],
+      website: ['', [Validators.required, Validators.pattern('https?://.+')]],
+      amenities: [[], [Validators.required, Validators.minLength(1)]],
       golfDescription: [''],
       golfLocation: ['', [Validators.required]],
       hideStatus: [0]
     });
   }
 
-  isAmenitySelected(amenity: string): boolean {
-    const selectedAmenities = this.golfCourseForm.get('amenities')?.value || [];
-    return selectedAmenities.includes(amenity);
+  isAmenitySelected(amenityId: number): boolean {
+    return this.selectedAmenities.includes(amenityId);
   }
 
-  toggleAmenity(amenity: string): void {
-    const selectedAmenities = [...(this.golfCourseForm.get('amenities')?.value || [])];
-    const index = selectedAmenities.indexOf(amenity);
+  toggleAmenity(amenity: Amenity): void {
+    const index = this.selectedAmenities.indexOf(amenity.id);
 
     if (index === -1) {
-      selectedAmenities.push(amenity);
+      this.selectedAmenities.push(amenity.id);
     } else {
-      selectedAmenities.splice(index, 1);
+      this.selectedAmenities.splice(index, 1);
     }
 
-    this.golfCourseForm.patchValue({ amenities: selectedAmenities });
+    this.golfCourseForm.patchValue({ amenities: this.selectedAmenities });
     this.golfCourseForm.get('amenities')?.markAsTouched();
   }
 
@@ -133,14 +134,9 @@ export class CreateCoursesComponent implements OnInit {
 
     try {
       this.loading = true;
-      const selectedAmenityNames = this.golfCourseForm.get('amenities')?.value || [];
-      const selectedAmenityIds = this.amenitiesList
-        .filter(a => selectedAmenityNames.includes(a.amenityName))
-        .map(a => a.id);
-
       const formData = {
         ...this.golfCourseForm.value,
-        amenities: selectedAmenityIds[0]
+        amenities: this.selectedAmenities
       };
 
       const response = await this.courseService.processCourse(formData);
@@ -170,6 +166,7 @@ export class CreateCoursesComponent implements OnInit {
 
   onReset(): void {
     this.submitted = false;
+    this.selectedAmenities = [];
     this.golfCourseForm.reset({
       hideStatus: 0,
       amenities: []

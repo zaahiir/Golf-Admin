@@ -54,6 +54,7 @@ export class UpdateCoursesComponent implements OnInit {
   submitted = false;
   amenitiesList: Amenity[] = [];
   courseId: string = '';
+  selectedAmenityIds: number[] = [];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -107,14 +108,16 @@ export class UpdateCoursesComponent implements OnInit {
       if (response.data.code === 1 && response.data.data.length > 0) {
         const courseData = response.data.data[0];
 
-        // Find the amenities that match the course's amenities
-        const selectedAmenities = this.amenitiesList
-          .filter(amenity => courseData.amenities.includes(amenity.id))
-          .map(amenity => amenity.amenityName);
+        // Store selected amenity IDs
+        this.selectedAmenityIds = courseData.amenities.map((amenityName: string) => {
+          const amenity = this.amenitiesList.find(a => a.amenityName === amenityName);
+          return amenity ? amenity.id : null;
+        }).filter((id: number | null): id is number => id !== null);
 
+        // Update form with course data
         this.golfCourseForm.patchValue({
           ...courseData,
-          amenities: selectedAmenities
+          amenities: this.selectedAmenityIds
         });
       } else {
         throw new Error('Course not found');
@@ -125,22 +128,20 @@ export class UpdateCoursesComponent implements OnInit {
     }
   }
 
-  isAmenitySelected(amenity: string): boolean {
-    const selectedAmenities = this.golfCourseForm.get('amenities')?.value || [];
-    return selectedAmenities.includes(amenity);
+  isAmenitySelected(amenityId: number): boolean {
+    return this.selectedAmenityIds.includes(amenityId);
   }
 
-  toggleAmenity(amenity: string): void {
-    const selectedAmenities = [...(this.golfCourseForm.get('amenities')?.value || [])];
-    const index = selectedAmenities.indexOf(amenity);
+  toggleAmenity(amenityId: number): void {
+    const index = this.selectedAmenityIds.indexOf(amenityId);
 
     if (index === -1) {
-      selectedAmenities.push(amenity);
+      this.selectedAmenityIds.push(amenityId);
     } else {
-      selectedAmenities.splice(index, 1);
+      this.selectedAmenityIds.splice(index, 1);
     }
 
-    this.golfCourseForm.patchValue({ amenities: selectedAmenities });
+    this.golfCourseForm.patchValue({ amenities: this.selectedAmenityIds });
     this.golfCourseForm.get('amenities')?.markAsTouched();
   }
 
@@ -161,14 +162,9 @@ export class UpdateCoursesComponent implements OnInit {
 
     try {
       this.loading = true;
-      const selectedAmenityNames = this.golfCourseForm.get('amenities')?.value || [];
-      const selectedAmenityIds = this.amenitiesList
-        .filter(a => selectedAmenityNames.includes(a.amenityName))
-        .map(a => a.id);
-
       const formData = {
         ...this.golfCourseForm.value,
-        amenities: selectedAmenityIds[0]
+        amenities: this.selectedAmenityIds
       };
 
       const response = await this.courseService.processCourse(formData, this.courseId);

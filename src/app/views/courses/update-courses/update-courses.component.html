@@ -101,8 +101,8 @@
               <button
                 *ngFor="let amenity of amenitiesList"
                 cButton
-                [color]="isAmenitySelected(amenity.amenityName) ? 'primary' : 'secondary'"
-                (click)="toggleAmenity(amenity.amenityName)"
+                [color]="isAmenitySelected(amenity.id) ? 'primary' : 'secondary'"
+                (click)="toggleAmenity(amenity.id)"
                 class="me-2 mb-2"
                 variant="outline"
                 type="button"

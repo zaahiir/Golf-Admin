@@ -1,63 +1,125 @@
 <c-col xs="12">
-    <c-card class="mb-4">
-      <c-card-body>
-        <form cForm class="row g-3">
-          <div class="col-auto">
-            <a cButton [routerLink]="['/blog/add']" color="primary" role="button">Create New Blog</a>
-          </div>
-        </form>
-      </c-card-body>
-    </c-card>
+  <c-card class="mb-4">
+    <c-card-body>
+      <form cForm class="row g-3">
+        <div class="col-auto">
+          <a cButton [routerLink]="['/blog/add']" color="primary" role="button">Create New Blog</a>
+        </div>
+      </form>
+    </c-card-body>
+  </c-card>
 </c-col>
 <c-row ngPreserveWhitespaces>
-    <c-col xs="12">
-      <c-card class="mb-4">
-        <c-card-body>
-          <c-col md="3" class="mb-4 flex justify-content-md-end">
-          <input cFormControl id="validationCustom09" 
-          (input)="search()"
-          [(ngModel)]="searchTerm"
-          type="search" 
-          placeholder="search" />
-          </c-col>
-          <table [hover]="true" [striped]="true" [bordered]="true" cTable>
-            <thead>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-body>
+        <!-- Search Input -->
+        <c-col md="3" class="mb-4">
+          <div class="position-relative">
+            <input
+              cFormControl
+              id="searchInput"
+              [(ngModel)]="searchTerm"
+              (input)="search()"
+              type="search"
+              placeholder="Search blogs..."
+            />
+            <c-spinner
+              *ngIf="isLoading"
+              size="sm"
+              class="position-absolute end-0 top-50 translate-middle-y me-2"
+            ></c-spinner>
+          </div>
+        </c-col>
+
+        <!-- Blog Table -->
+        <table [hover]="true" [striped]="true" [bordered]="true" cTable class="align-middle">
+          <thead>
             <tr>
-              <th scope="col">S.No</th>
-              <th scope="col">Blog Title</th>
-              <th scope="col">Blog Author</th>
+              <th scope="col" style="width: 70px">S.No</th>
               <th scope="col">Blog Date</th>
-              <th scope="col">Blog Category</th>
-              <th scope="col">Action</th>  
+              <th scope="col">Blog Title</th>
+              <th scope="col">Blog Description</th>
+              <th scope="col">Blog Image</th>
+              <th scope="col" style="width: 120px">Action</th>
             </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
+          </thead>
+          <tbody>
+            <tr *ngFor="let blog of paginatedBlogList; let i = index">
+              <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+              <td>{{ blog.blogDate | date:'mediumDate' }}</td>
+              <td>{{ blog.blogTitle }}</td>
               <td>
-                <a cButton [routerLink]="['/blog/update']" color="btn-transparent" role="button" class="btn-sm text-primary border-0  py-0" [cTooltip]="tooltipEditText" cTooltipPlacement="top"><svg [cIcon]="icons.cilPen" size="xl" title="List Icon"></svg></a>
-                <a cButton color="btn-transparent" role="button" class="btn-sm text-danger border-0  py-0" [cTooltip]="tooltipDeleteText" cTooltipPlacement="top"><svg [cIcon]="icons.cilTrash" width="25" title="List Icon"></svg></a>
+                <div style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  {{ blog.blogDescription }}
+                </div>
+              </td>
+              <td style="width: 200px">
+                <div *ngIf="blog.blogImage" class="d-flex flex-column gap-2">
+                  <a
+                    href="javascript:void(0)"
+                    class="text-primary text-decoration-none"
+                    (click)="openImage(blog.blogImage)"
+                  >
+                    {{ getImageName(blog.blogImage) }}
+                  </a>
+                </div>
+                <span *ngIf="!blog.blogImage" class="text-muted">No Image</span>
+              </td>
+              <td>
+                <a
+                  cButton
+                  [routerLink]="['/blog/update', blog.id]"
+                  color="btn-transparent"
+                  class="btn-sm text-primary border-0 py-0"
+                  [cTooltip]="tooltipEditText"
+                  cTooltipPlacement="top"
+                >
+                  <svg [cIcon]="icons.cilPen" size="xl"></svg>
+                </a>
+                <a
+                  cButton
+                  (click)="deleteBlog(blog.id)"
+                  color="btn-transparent"
+                  class="btn-sm text-danger border-0 py-0"
+                  [cTooltip]="tooltipDeleteText"
+                  cTooltipPlacement="top"
+                >
+                  <svg [cIcon]="icons.cilTrash" width="25"></svg>
+                </a>
               </td>
             </tr>
-            </tbody>
-          </table>
-          <!-- <c-pagination aria-label="Page navigation example" *ngIf="arnList.length > itemsPerPage">
-            <c-page-item>
-              <a cPageLink (click)="previousPage()" [attr.aria-disabled]="currentPage === 1">Previous</a>
-            </c-page-item>
-            <c-page-item *ngFor="let page of pageRange">
-              <a cPageLink (click)="changePage(page)" [ngClass]="{'active': currentPage === page}">{{ page }}</a>
-            </c-page-item>
-            <c-page-item>
-              <a cPageLink (click)="nextPage()" [attr.aria-disabled]="currentPage === totalPages">Next</a>
-            </c-page-item>
-          </c-pagination> -->
-        </c-card-body>
-      </c-card>
-    </c-col>
+            <tr *ngIf="paginatedBlogList.length === 0">
+              <td colspan="6" class="text-center py-4">
+                {{ isLoading ? 'Loading...' : 'No blogs found' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <c-pagination *ngIf="blogList.length > itemsPerPage" aria-label="Blog navigation">
+          <c-page-item>
+            <a cPageLink (click)="previousPage()" [ngClass]="{'disabled': currentPage === 1}">
+              Previous
+            </a>
+          </c-page-item>
+          <c-page-item *ngFor="let page of pageRange">
+            <a
+              cPageLink
+              (click)="changePage(page)"
+              [ngClass]="{'active': currentPage === page}"
+            >
+              {{ page }}
+            </a>
+          </c-page-item>
+          <c-page-item>
+            <a cPageLink (click)="nextPage()" [ngClass]="{'disabled': currentPage === totalPages}">
+              Next
+            </a>
+          </c-page-item>
+        </c-pagination>
+      </c-card-body>
+    </c-card>
+  </c-col>
 </c-row>
-  

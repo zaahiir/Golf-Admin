@@ -1,18 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { NgStyle, NgClass, NgForOf, NgIf, CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NgIf, NgClass, CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
   CardComponent,
   CardHeaderComponent,
   CardBodyComponent,
   FormFloatingDirective,
-  FormDirective,
   FormLabelDirective,
   FormControlDirective,
   FormFeedbackComponent,
   ButtonDirective,
   RowComponent,
-  ColComponent
+  ColComponent,
+  SpinnerComponent
 } from '@coreui/angular';
 import { BlogService } from '../../common-service/blog/blog.service';
 import { Router } from '@angular/router';
@@ -25,7 +25,6 @@ import Swal from 'sweetalert2';
     NgIf,
     CommonModule,
     ReactiveFormsModule,
-    FormsModule,
     CardComponent,
     CardHeaderComponent,
     CardBodyComponent,
@@ -35,7 +34,8 @@ import Swal from 'sweetalert2';
     FormFeedbackComponent,
     ButtonDirective,
     RowComponent,
-    ColComponent
+    ColComponent,
+    SpinnerComponent
   ],
   templateUrl: './create-blog.component.html',
   styleUrl: './create-blog.component.scss'
@@ -45,6 +45,7 @@ export class CreateBlogComponent implements OnInit {
   loading = false;
   submitted = false;
   selectedFile: File | null = null;
+  imagePreview: string | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -61,15 +62,33 @@ export class CreateBlogComponent implements OnInit {
       blogTitle: ['', [Validators.required, Validators.minLength(3)]],
       blogDate: ['', [Validators.required]],
       blogDescription: ['', [Validators.required, Validators.minLength(10)]],
-      blogImage: ['']
+      blogImage: [null]
     });
   }
 
   onFileChange(event: Event): void {
     const element = event.target as HTMLInputElement;
     const file = element.files?.[0];
+
     if (file) {
+      // File size validation (e.g., max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'File size should not exceed 5MB',
+          icon: 'error'
+        });
+        return;
+      }
+
       this.selectedFile = file;
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.imagePreview = reader.result as string;
+      };
+      reader.readAsDataURL(file);
     }
   }
 
@@ -77,6 +96,13 @@ export class CreateBlogComponent implements OnInit {
     this.submitted = true;
 
     if (this.blogForm.invalid) {
+      // Highlight all invalid fields
+      Object.keys(this.blogForm.controls).forEach(key => {
+        const control = this.blogForm.get(key);
+        if (control?.invalid) {
+          control.markAsTouched();
+        }
+      });
       return;
     }
 
@@ -96,21 +122,24 @@ export class CreateBlogComponent implements OnInit {
         formData.append('blogImage', this.selectedFile);
       }
 
-      await this.blogService.processBlog(formData);
+      const response = await this.blogService.processBlog(formData);
 
-      await Swal.fire({
-        title: 'Success!',
-        text: 'Blog post has been created successfully',
-        icon: 'success',
-        confirmButtonText: 'Ok'
-      });
-
-      this.router.navigate(['/blogs']);
+      if (response.data.code === 1) {
+        await Swal.fire({
+          title: 'Success!',
+          text: 'Blog post has been created successfully',
+          icon: 'success',
+          confirmButtonText: 'Ok'
+        });
+        this.router.navigate(['/blog']);
+      } else {
+        throw new Error(response.data.message || 'Failed to create blog post');
+      }
     } catch (error) {
       console.error('Error creating blog:', error);
       await Swal.fire({
         title: 'Error!',
-        text: 'Failed to create blog post',
+        text: error instanceof Error ? error.message : 'Failed to create blog post',
         icon: 'error',
         confirmButtonText: 'Ok'
       });
@@ -123,6 +152,7 @@ export class CreateBlogComponent implements OnInit {
     this.submitted = false;
     this.blogForm.reset();
     this.selectedFile = null;
+    this.imagePreview = null;
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -137,6 +167,9 @@ export class CreateBlogComponent implements OnInit {
     if (control.errors['required']) return 'This field is required';
     if (control.errors['minlength']) {
       return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
+    }
+    if (control.errors['maxlength']) {
+      return `Maximum length is ${control.errors['maxlength'].requiredLength} characters`;
     }
 
     return 'Invalid input';

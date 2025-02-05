@@ -1,3 +1,4 @@
+<!-- create-courses.component.html -->
 <c-row ngPreserveWhitespaces>
   <c-col xs="12">
     <c-card class="mb-4">
@@ -5,7 +6,7 @@
         <strong>New Golf Course</strong>
       </c-card-header>
       <c-card-body>
-        <form [formGroup]="golfCourseForm" (ngSubmit)="onSubmit()"  #form="ngForm" cForm class="row g-3 needs-validation">
+        <form [formGroup]="golfCourseForm" (ngSubmit)="onSubmit()" #form="ngForm" cForm class="row g-3 needs-validation">
           <!-- Basic Information -->
           <c-col [cFormFloating]="true" md="6">
             <input cFormControl id="courseName" formControlName="courseName" type="text" placeholder="Course Name" />
@@ -95,14 +96,15 @@
             </c-form-feedback>
           </c-col>
 
+          <!-- Amenities Section -->
           <c-col md="12">
             <label cLabel>Amenities</label>
             <div class="amenities-container">
               <button
                 *ngFor="let amenity of amenitiesList"
                 cButton
-                [color]="isAmenitySelected(amenity.amenityName) ? 'primary' : 'secondary'"
-                (click)="toggleAmenity(amenity.amenityName)"
+                [color]="isAmenitySelected(amenity.id) ? 'primary' : 'secondary'"
+                (click)="toggleAmenity(amenity)"
                 class="me-2 mb-2"
                 variant="outline"
                 type="button"
