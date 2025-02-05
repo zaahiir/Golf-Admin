@@ -176,10 +176,24 @@ export class CreateCoursesComponent implements OnInit {
 
     try {
       this.loading = true;
-      const formData = {
-        ...this.golfCourseForm.value,
-        amenities: this.selectedAmenities
-      };
+
+      // Create FormData object to handle file upload
+      const formData = new FormData();
+
+      // Add all form fields to FormData
+      Object.keys(this.golfCourseForm.value).forEach(key => {
+        if (key !== 'courseImage' && key !== 'amenities') {
+          formData.append(key, this.golfCourseForm.value[key]);
+        }
+      });
+
+      // Add amenities as JSON string
+      formData.append('amenities', JSON.stringify(this.selectedAmenities));
+
+      // Add the file if selected
+      if (this.selectedFile) {
+        formData.append('courseImage', this.selectedFile);
+      }
 
       const response = await this.courseService.processCourse(formData);
 

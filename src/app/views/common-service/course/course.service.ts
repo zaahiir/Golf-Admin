@@ -25,7 +25,12 @@ export class CourseService {
   }
 
   processCourse(data: any, id: string = '0') {
-    return axios.post(this.processing.replace('0', id), data);
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    };
+    return axios.post(this.processing.replace('0', id), data, config);
   }
 
   deleteCourse(id: string) {
