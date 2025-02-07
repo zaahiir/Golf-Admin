@@ -63,6 +63,14 @@ export const routes: Routes = [
         path: 'coupon',
         loadChildren: () => import('./views/coupon/routes').then((m) => m.couponRoutes)
       },
+      {
+        path: 'enquiry',
+        loadChildren: () => import('./views/enquiry/routes').then((m) => m.enquiryRoutes)
+      },
+      {
+        path: 'memberEnquiry',
+        loadChildren: () => import('./views/memberEnquiry/routes').then((m) => m.memberEnquiryRoutes)
+      },
     ]
   },
   { path: '**', redirectTo: 'dashboard' }

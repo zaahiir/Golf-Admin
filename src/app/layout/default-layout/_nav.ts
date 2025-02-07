@@ -7,6 +7,16 @@ export const navItems: INavData[] = [
     iconComponent: { name: 'cil-speedometer' }
   },
   {
+    name: 'Enquiries',
+    url: '/enquiry',
+    iconComponent: { name: 'cil-notes' }
+  },
+  {
+    name: 'Member Enquiries',
+    url: '/memberEnquiry',
+    iconComponent: { name: 'cil-location-pin' }
+  },
+  {
     name: 'Booking',
     url: '/bookings',
     iconComponent: { name: 'cil-pencil' }
@@ -54,7 +64,7 @@ export const navItems: INavData[] = [
   {
     name: 'Coupon',
     url: '/coupon',
-    iconComponent: { name: 'cil-credit-card' }  
+    iconComponent: { name: 'cil-credit-card' }
   },
   {
     name: 'Report',
