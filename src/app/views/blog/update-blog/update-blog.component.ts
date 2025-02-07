@@ -9,11 +9,10 @@ import { Router } from '@angular/router';
   selector: 'app-update-blog',
   standalone: true,
   imports: [
-    NgIf, CommonModule, NgClass, NgForOf, RowComponent, ColComponent,
+    NgIf, CommonModule, RowComponent, ColComponent,
     TextColorDirective, CardComponent, FormFloatingDirective, CardHeaderComponent,
     CardBodyComponent, ReactiveFormsModule, FormsModule, FormDirective,
     FormLabelDirective, FormControlDirective, FormFeedbackComponent,
-    InputGroupComponent, InputGroupTextDirective, FormSelectDirective,
     ButtonDirective
   ],
   templateUrl: './update-blog.component.html',
@@ -45,8 +44,8 @@ export class UpdateBlogComponent implements OnInit {
     });
   }
 
-  get f() { 
-    return this.blogForm.controls; 
+  get f() {
+    return this.blogForm.controls;
   }
 
   async onSubmit(): Promise<void> {
@@ -61,7 +60,7 @@ export class UpdateBlogComponent implements OnInit {
 
       // Add your API call here to save the blog data
       // const response = await this.blogService.createBlog(this.blogForm.value);
-      
+
       await Swal.fire({
         title: 'Success!',
         text: 'Blog post has been created successfully',
