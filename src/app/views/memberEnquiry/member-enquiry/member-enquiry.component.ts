@@ -15,7 +15,7 @@ import {
   PaginationComponent,
   PageItemComponent,
   PageLinkDirective,
-  SpinnerComponent
+  FormControlDirective
 } from '@coreui/angular';
 import { MemberEnquiryService } from '../../common-service/memberEnquiry/member-enquiry.service';
 import Swal from 'sweetalert2';
@@ -45,12 +45,12 @@ interface MemberEnquiryInterface {
     CardComponent,
     CardBodyComponent,
     FormsModule,
+    FormControlDirective,
     ButtonDirective,
     TableDirective,
     PaginationComponent,
     PageItemComponent,
     PageLinkDirective,
-    SpinnerComponent
   ],
   templateUrl: './member-enquiry.component.html',
   styleUrl: './member-enquiry.component.scss'
@@ -61,6 +61,7 @@ export class MemberEnquiryComponent implements OnInit {
   tooltipDeleteText = 'Delete';
 
   memberEnquiryList: MemberEnquiryInterface[] = [];
+  filteredList: MemberEnquiryInterface[] = [];
   pageRange: number[] = [];
   currentPage = 1;
   itemsPerPage = 10;
@@ -81,16 +82,37 @@ export class MemberEnquiryComponent implements OnInit {
       const response = await this.memberEnquiryService.listMemberEnquiry('0');
       if (response.data.code === 1) {
         this.memberEnquiryList = response.data.data;
+        this.filterList();
         this.updatePageRange();
       } else {
         await Swal.fire('Error', 'Failed to load member enquiry list', 'error');
       }
     } catch (error) {
-      console.error('Error loading member enquiry list:', error);
       await Swal.fire('Error', 'An error occurred while loading the list', 'error');
     } finally {
       this.isLoading = false;
     }
+  }
+
+  filterList() {
+    if (!this.searchTerm) {
+      this.filteredList = [...this.memberEnquiryList];
+      return;
+    }
+
+    const searchTermLower = this.searchTerm.toLowerCase().trim();
+    this.filteredList = this.memberEnquiryList.filter(enquiry => {
+      const fullName = `${enquiry.memberEnquiryFirstName || ''} ${enquiry.memberEnquiryLastName || ''}`.toLowerCase();
+      const searchableFields = [
+        (enquiry.memberEnquiryPlan || '').toLowerCase(),
+        fullName,
+        (enquiry.memberEnquiryPhoneNumber || '').toLowerCase(),
+        (enquiry.memberEnquiryEmail || '').toLowerCase(),
+        (enquiry.memberEnquiryTown || '').toLowerCase()
+      ];
+
+      return searchableFields.some(field => field.includes(searchTermLower));
+    });
   }
 
   updatePageRange() {
@@ -124,38 +146,19 @@ export class MemberEnquiryComponent implements OnInit {
     }
   }
 
-  search() {
-    this.currentPage = 1;
-    this.updatePageRange();
-  }
-
   get paginatedMemberEnquiryList() {
-    let filtered = this.memberEnquiryList;
-    if (this.searchTerm) {
-      const searchTermLower = this.searchTerm.toLowerCase();
-      filtered = this.memberEnquiryList.filter(enquiry =>
-        enquiry.memberEnquiryPlan.toLowerCase().includes(searchTermLower) ||
-        `${enquiry.memberEnquiryFirstName} ${enquiry.memberEnquiryLastName}`.toLowerCase().includes(searchTermLower) ||
-        enquiry.memberEnquiryPhoneNumber.toLowerCase().includes(searchTermLower) ||
-        enquiry.memberEnquiryEmail.toLowerCase().includes(searchTermLower) ||
-        enquiry.memberEnquiryTown.toLowerCase().includes(searchTermLower)
-      );
-    }
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    return filtered.slice(startIndex, startIndex + this.itemsPerPage);
+    return this.filteredList.slice(startIndex, startIndex + this.itemsPerPage);
   }
 
   get totalPages() {
-    const filteredLength = this.searchTerm
-      ? this.memberEnquiryList.filter(enquiry =>
-          enquiry.memberEnquiryPlan.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          `${enquiry.memberEnquiryFirstName} ${enquiry.memberEnquiryLastName}`.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          enquiry.memberEnquiryPhoneNumber.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          enquiry.memberEnquiryEmail.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          enquiry.memberEnquiryTown.toLowerCase().includes(this.searchTerm.toLowerCase())
-        ).length
-      : this.memberEnquiryList.length;
-    return Math.ceil(filteredLength / this.itemsPerPage);
+    return Math.ceil(this.filteredList.length / this.itemsPerPage);
+  }
+
+  search() {
+    this.filterList();
+    this.currentPage = 1;
+    this.updatePageRange();
   }
 
   async deleteMemberEnquiry(id: number) {
@@ -182,7 +185,6 @@ export class MemberEnquiryComponent implements OnInit {
           await Swal.fire('Error', 'Failed to delete member enquiry', 'error');
         }
       } catch (error) {
-        console.error('Error deleting member enquiry:', error);
         await Swal.fire('Error', 'An error occurred while deleting the member enquiry', 'error');
       } finally {
         this.isLoading = false;
