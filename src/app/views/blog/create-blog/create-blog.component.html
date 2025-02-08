@@ -40,10 +40,12 @@
           <!-- Blog Description with TinyMCE -->
           <c-col md="12">
             <label cLabel for="blogDescription">Blog Description</label>
-            <editor
-              formControlName="blogDescription"
-              [init]="editorConfig"
-              class="mt-2"
+            <editor apiKey="jrj64u0e25jw0n4a9v0jbajhi9iakdkeyta9ryl58xwmqwz7"
+            formControlName="blogDescription"
+              [init]="{
+                plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+              }"
             ></editor>
             <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('blogDescription')">
               {{ getErrorMessage('blogDescription') }}
