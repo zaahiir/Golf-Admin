@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { NgIf, NgClass, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EditorModule } from '@tinymce/tinymce-angular';
+import { environment } from '../../environment';
 import {
   CardComponent,
   CardHeaderComponent,
@@ -25,6 +27,7 @@ import Swal from 'sweetalert2';
     NgIf,
     CommonModule,
     ReactiveFormsModule,
+    EditorModule,
     CardComponent,
     CardHeaderComponent,
     CardBodyComponent,
@@ -47,6 +50,23 @@ export class CreateBlogComponent implements OnInit {
   selectedFile: File | null = null;
   imagePreview: string | null = null;
 
+  editorConfig = {
+    // Replace hardcoded API key with environment variable
+    apiKey: environment.tinymceApiKey,
+    height: 500,
+    menubar: true,
+    plugins: [
+      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+      'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+    ],
+    toolbar: 'undo redo | formatselect | ' +
+      'bold italic backcolor | alignleft aligncenter ' +
+      'alignright alignjustify | bullist numlist outdent indent | ' +
+      'removeformat | help',
+    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+  };
+
   constructor(
     private formBuilder: FormBuilder,
     private blogService: BlogService,
@@ -61,7 +81,7 @@ export class CreateBlogComponent implements OnInit {
     this.blogForm = this.formBuilder.group({
       blogTitle: ['', [Validators.required, Validators.minLength(3)]],
       blogDate: ['', [Validators.required]],
-      blogDescription: ['', [Validators.required, Validators.minLength(10)]],
+      blogDescription: ['', [Validators.required]],
       blogImage: [null]
     });
   }

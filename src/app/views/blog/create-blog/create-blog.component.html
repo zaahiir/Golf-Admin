@@ -1,3 +1,4 @@
+<!-- create-blog.component.html -->
 <c-row>
   <c-col xs="12">
     <c-card class="mb-4">
@@ -36,16 +37,14 @@
             </c-form-feedback>
           </c-col>
 
-          <!-- Blog Description -->
-          <c-col [cFormFloating]="true" md="12">
-            <textarea
-              cFormControl
-              id="blogDescription"
-              formControlName="blogDescription"
-              rows="6"
-              placeholder="Blog Description"
-            ></textarea>
+          <!-- Blog Description with TinyMCE -->
+          <c-col md="12">
             <label cLabel for="blogDescription">Blog Description</label>
+            <editor
+              formControlName="blogDescription"
+              [init]="editorConfig"
+              class="mt-2"
+            ></editor>
             <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('blogDescription')">
               {{ getErrorMessage('blogDescription') }}
             </c-form-feedback>

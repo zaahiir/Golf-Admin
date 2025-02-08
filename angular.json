@@ -35,7 +35,9 @@
             "preserveSymlinks": true,
             "assets": [
               "src/mgc_logo-03.png",
-              "src/assets"
+              "src/assets",
+              { "glob": "**/*", "input": "node_modules/tinymce", "output": "/tinymce/" }
+
             ],
             "styles": [
               "src/scss/styles.scss"
