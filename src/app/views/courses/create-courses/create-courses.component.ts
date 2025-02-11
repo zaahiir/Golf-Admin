@@ -97,6 +97,7 @@ export class CreateCoursesComponent implements OnInit {
       website: ['', [Validators.required, Validators.pattern('https?://.+')]],
       amenities: [[], [Validators.required, Validators.minLength(1)]],
       golfDescription: [''],
+      golfHighlight: [''],
       golfLocation: ['', [Validators.required]],
       courseImage: [null],
       hideStatus: [0]

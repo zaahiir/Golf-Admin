@@ -89,6 +89,14 @@
           </c-col>
 
           <c-col [cFormFloating]="true" md="12">
+            <textarea cFormControl id="golfHighlight" formControlName="golfHighlight" placeholder="Highlight" rows="3"></textarea>
+            <label cLabel for="golfHighlight" class="ms-2">Highlight</label>
+            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('golfHighlight')">
+              {{ getErrorMessage('golfHighlight') }}
+            </c-form-feedback>
+          </c-col>
+
+          <c-col [cFormFloating]="true" md="12">
             <textarea cFormControl id="golfDescription" formControlName="golfDescription" placeholder="Description" rows="3"></textarea>
             <label cLabel for="golfDescription" class="ms-2">Description</label>
             <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('golfDescription')">

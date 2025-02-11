@@ -33,6 +33,7 @@ import Swal from 'sweetalert2';
 interface BlogInterface {
   id: number;
   blogTitle: string;
+  blogHighlight: string;
   blogDescription: string;
   blogDate: string;
   blogImage: string;

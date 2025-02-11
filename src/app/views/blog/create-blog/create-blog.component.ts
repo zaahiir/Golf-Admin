@@ -64,6 +64,7 @@ export class CreateBlogComponent implements OnInit {
       blogTitle: ['', [Validators.required, Validators.minLength(3)]],
       blogDate: ['', [Validators.required]],
       blogDescription: ['', [Validators.required]],
+      blogHighlight: [''],
       blogImage: [null]
     });
   }
