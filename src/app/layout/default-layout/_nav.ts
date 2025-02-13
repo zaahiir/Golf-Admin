@@ -62,6 +62,11 @@ export const navItems: INavData[] = [
     iconComponent: { name: 'cil-indent-decrease' }
   },
   {
+    name: 'Update Concept',
+    url: '/concept',
+    iconComponent: { name: 'cil-indent-decrease' }
+  },
+  {
     name: 'Coupon',
     url: '/coupon',
     iconComponent: { name: 'cil-credit-card' }

@@ -60,6 +60,10 @@ export const routes: Routes = [
         loadChildren: () => import('./views/blog/routes').then((m) => m.blogRoutes)
       },
       {
+        path: 'concept',
+        loadChildren: () => import('./views/concept/routes').then((m) => m.couponRoutes)
+      },
+      {
         path: 'coupon',
         loadChildren: () => import('./views/coupon/routes').then((m) => m.couponRoutes)
       },
