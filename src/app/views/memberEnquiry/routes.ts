@@ -14,6 +14,13 @@ export const memberEnquiryRoutes: Routes = [
           title: 'List Member Enquiries'
         },
       },
+      {
+        path: 'addMember',
+        loadComponent: () => import('./update-member-enquiry/update-member-enquiry.component').then(m => m.UpdateMemberEnquiryComponent),
+        data: {
+          title: 'Add Member'
+        },
+      },
     ]
   }
 ];
