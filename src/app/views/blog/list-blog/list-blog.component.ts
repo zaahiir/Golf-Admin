@@ -159,7 +159,7 @@ export class ListBlogComponent implements OnInit {
     if (!imageUrl) return;
 
     // Construct the full URL using your backend URL
-    const baseUrl = 'http://localhost'; // Replace with your actual backend URL
+    const baseUrl = 'https://mastergolfclub'; // Replace with your actual backend URL
     const fullUrl = imageUrl.startsWith('http') ? imageUrl : `${baseUrl}${imageUrl}`;
 
     window.open(fullUrl, '_blank');

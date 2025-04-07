@@ -15,7 +15,8 @@ interface LoginResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost/apis/login/';
+  // private apiUrl = 'http://localhost/apis/login/';
+  private apiUrl = 'https://mastergolfclub.com/apis/login/';
 
   constructor(private http: HttpClient) {}
 

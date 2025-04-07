@@ -1,0 +1,1 @@
+import"./chunk-AAPNLDO3.js";var e=[{path:"",data:{title:"Concept"},children:[{path:"",loadComponent:()=>import("./chunk-RQRVOJMK.js").then(t=>t.UpdateConceptComponent),data:{title:"Update Concept"}},{path:"add",loadComponent:()=>import("./chunk-ULIVH44P.js").then(t=>t.CreateConceptComponent),data:{title:"New Concept"}}]}];export{e as couponRoutes};
