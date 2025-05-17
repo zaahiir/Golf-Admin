@@ -6,12 +6,12 @@
   id="sidebar1"
   visible
 >
-  <c-sidebar-header>
-    <c-sidebar-brand [routerLink]="[]">
-      <img src="../../../assets/mgc_logo-03.png" class="sidebar-brand-full" height="100" alt="logo">
-      <img src="../../../assets/mgc_logo-03.png" class="sidebar-brand-narrow" height="40" alt="logo">
-    </c-sidebar-brand>
-  </c-sidebar-header>
+<c-sidebar-header class="d-flex justify-content-center align-items-center mt-3">
+  <c-sidebar-brand [routerLink]="[]" class="w-100 text-center">
+    <img src="../../../assets/mgc_logo-03.png" class="sidebar-brand-full" height="100" alt="logo">
+    <img src="../../../assets/mgc_logo-03.png" class="sidebar-brand-narrow" height="100" alt="logo">
+  </c-sidebar-brand>
+</c-sidebar-header>
 
   <ng-scrollbar #scrollbar="ngScrollbar" (updated)="onScrollbarUpdate(scrollbar.state)" class="overflow" pointerEventsMethod="scrollbar" visibility="hover">
     <c-sidebar-nav #overflow [navItems]="navItems" dropdownMode="close" compact />
