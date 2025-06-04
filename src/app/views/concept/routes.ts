@@ -9,16 +9,16 @@ export const couponRoutes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./update-concept/update-concept.component').then(m => m.UpdateConceptComponent),
+        loadComponent: () => import('./create-concept/create-concept.component').then(m => m.CreateConceptComponent),
         data: {
           title: 'Update Concept'
         },
       },
       {
-        path: 'add',
-        loadComponent: () => import('./create-concept/create-concept.component').then(m => m.CreateConceptComponent),
+        path: 'update',
+        loadComponent: () => import('./update-concept/update-concept.component').then(m => m.UpdateConceptComponent),
         data: {
-          title: 'New Concept'
+          title: 'Update Concept'
         },
       },
     ]

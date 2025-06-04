@@ -1,26 +1,65 @@
+// concept.service.ts
 import { Injectable } from '@angular/core';
 import { BaseAPIUrl, baseURLType } from '../commom-api-url';
 import axios from 'axios';
+
+export interface ConceptItem {
+  id?: number;
+  heading: string;
+  paragraph: string;
+  order: number;
+  hideStatus?: number;
+}
+
+export interface ConceptData {
+  id?: number;
+  conceptHighlight: string;
+  conceptCount: number;
+  items: ConceptItem[];
+  hideStatus?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConceptService {
   private apiUrl: string;
-  private lists: string;
-  private processing: string;
 
   constructor() {
     this.apiUrl = new BaseAPIUrl().getUrl(baseURLType);
-    this.lists = this.apiUrl + "concept/0/listing/";
-    this.processing = this.apiUrl + "concept/0/processing/";
   }
 
-  listConcept(id: string = '0') {
-    return axios.get(this.lists.replace('0', id));
+  // Get concept data
+  getConcept() {
+    return axios.get(`${this.apiUrl}concept/get_concept/`);
   }
 
-  processConcept(data: any, id: string = '0') {
-    return axios.post(this.processing.replace('0', id), data);
+  // List concept (alias for getConcept for backward compatibility)
+  listConcept() {
+    return this.getConcept();
+  }
+
+  // Create or Update concept
+  createOrUpdateConcept(data: ConceptData) {
+    return axios.post(`${this.apiUrl}concept/create_or_update_concept/`, data);
+  }
+
+  // Process concept (alias for createOrUpdateConcept for backward compatibility)
+  processConcept(data: ConceptData) {
+    return this.createOrUpdateConcept(data);
+  }
+
+  // Delete entire concept
+  deleteConcept() {
+    return axios.delete(`${this.apiUrl}concept/delete_concept/`);
+  }
+
+  // Delete specific concept item
+  deleteConceptItem(itemId: number) {
+    return axios.delete(`${this.apiUrl}concept/1/delete_item/`, {
+      data: { item_id: itemId }
+    });
   }
 }

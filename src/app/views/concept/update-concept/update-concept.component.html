@@ -1,147 +1,110 @@
+<!-- create-concept.component.html -->
 <c-row ngPreserveWhitespaces>
   <c-col xs="12">
     <c-card class="mb-4">
       <c-card-header>
-        <strong>Update Concept</strong>
+        <strong>Create/Edit Concept</strong>
       </c-card-header>
       <c-card-body>
-        <form [formGroup]="conceptForm" (ngSubmit)="onSubmit()" cForm class="row g-3 needs-validation">
-          <!-- Highlight Section -->
+        <form [formGroup]="conceptForm" (ngSubmit)="onSubmit()" #form="ngForm" cForm class="row g-3 needs-validation">
+
+          <!-- Concept Highlight -->
           <c-col [cFormFloating]="true" md="12">
-            <input cFormControl id="conceptHighlight" formControlName="conceptHighlight" type="text" placeholder="Concept Highlight" />
+            <textarea
+              cFormControl
+              id="conceptHighlight"
+              formControlName="conceptHighlight"
+              placeholder="Concept Highlight"
+              rows="3">
+            </textarea>
             <label cLabel for="conceptHighlight" class="ms-2">Concept Highlight</label>
             <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptHighlight')">
               {{ getErrorMessage('conceptHighlight') }}
             </c-form-feedback>
           </c-col>
 
-          <!-- Section One -->
-          <c-col [cFormFloating]="true" md="3">
-            <input cFormControl id="conceptHeadingOne" formControlName="conceptHeadingOne" type="text" placeholder="Heading One" />
-            <label cLabel for="conceptHeadingOne" class="ms-2">Heading One</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptHeadingOne')">
-              {{ getErrorMessage('conceptHeadingOne') }}
-            </c-form-feedback>
-          </c-col>
+          <!-- Dynamic Concept Items -->
+          <c-col xs="12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Concept Items ({{ conceptItems.length }}/8)</h5>
+              <button
+                type="button"
+                cButton
+                color="success"
+                size="sm"
+                (click)="addConceptItem()"
+                [disabled]="conceptItems.length >= 8">
+                <i class="fas fa-plus me-1"></i>
+                Add Concept
+              </button>
+            </div>
 
-          <c-col [cFormFloating]="true" md="9">
-            <textarea cFormControl id="conceptParaOne" formControlName="conceptParaOne" placeholder="Paragraph One"></textarea>
-            <label cLabel for="conceptParaOne" class="ms-2">Paragraph One</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptParaOne')">
-              {{ getErrorMessage('conceptParaOne') }}
-            </c-form-feedback>
-          </c-col>
+            <div formArrayName="items">
+              <div
+                *ngFor="let item of conceptItems.controls; let i = index"
+                [formGroupName]="i"
+                class="concept-item-card mb-4 p-3 border rounded">
 
-          <!-- Section Two -->
-          <c-col [cFormFloating]="true" md="3">
-            <input cFormControl id="conceptHeadingTwo" formControlName="conceptHeadingTwo" type="text" placeholder="Heading Two" />
-            <label cLabel for="conceptHeadingTwo" class="ms-2">Heading Two</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptHeadingTwo')">
-              {{ getErrorMessage('conceptHeadingTwo') }}
-            </c-form-feedback>
-          </c-col>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="mb-0">Concept Item {{ i + 1 }}</h6>
+                  <button
+                    type="button"
+                    cButton
+                    color="danger"
+                    size="sm"
+                    variant="outline"
+                    (click)="removeConceptItem(i)"
+                    [disabled]="conceptItems.length <= 1">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
 
-          <c-col [cFormFloating]="true" md="9">
-            <textarea cFormControl id="conceptParaTwo" formControlName="conceptParaTwo" placeholder="Paragraph Two"></textarea>
-            <label cLabel for="conceptParaTwo" class="ms-2">Paragraph Two</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptParaTwo')">
-              {{ getErrorMessage('conceptParaTwo') }}
-            </c-form-feedback>
-          </c-col>
+                <c-row>
+                  <c-col [cFormFloating]="true" md="4">
+                    <input
+                      cFormControl
+                      [id]="'heading_' + i"
+                      formControlName="heading"
+                      type="text"
+                      placeholder="Heading" />
+                    <label cLabel [for]="'heading_' + i" class="ms-2">Heading</label>
+                    <c-form-feedback [valid]="false" *ngIf="isItemFieldInvalid(i, 'heading')">
+                      This field is required
+                    </c-form-feedback>
+                  </c-col>
 
-          <!-- Section Three -->
-          <c-col [cFormFloating]="true" md="3">
-            <input cFormControl id="conceptHeadingThree" formControlName="conceptHeadingThree" type="text" placeholder="Heading Three" />
-            <label cLabel for="conceptHeadingThree" class="ms-2">Heading Three</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptHeadingThree')">
-              {{ getErrorMessage('conceptHeadingThree') }}
-            </c-form-feedback>
-          </c-col>
-
-          <c-col [cFormFloating]="true" md="9">
-            <textarea cFormControl id="conceptParaThree" formControlName="conceptParaThree" placeholder="Paragraph Three"></textarea>
-            <label cLabel for="conceptParaThree" class="ms-2">Paragraph Three</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptParaThree')">
-              {{ getErrorMessage('conceptParaThree') }}
-            </c-form-feedback>
-          </c-col>
-
-          <!-- Section Four -->
-          <c-col [cFormFloating]="true" md="3">
-            <input cFormControl id="conceptHeadingFour" formControlName="conceptHeadingFour" type="text" placeholder="Heading Four" />
-            <label cLabel for="conceptHeadingFour" class="ms-2">Heading Four</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptHeadingFour')">
-              {{ getErrorMessage('conceptHeadingFour') }}
-            </c-form-feedback>
-          </c-col>
-
-          <c-col [cFormFloating]="true" md="9">
-            <textarea cFormControl id="conceptParaFour" formControlName="conceptParaFour" placeholder="Paragraph Four"></textarea>
-            <label cLabel for="conceptParaFour" class="ms-2">Paragraph Four</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptParaFour')">
-              {{ getErrorMessage('conceptParaFour') }}
-            </c-form-feedback>
-          </c-col>
-
-          <!-- Section Five -->
-          <c-col [cFormFloating]="true" md="3">
-            <input cFormControl id="conceptHeadingFive" formControlName="conceptHeadingFive" type="text" placeholder="Heading Five" />
-            <label cLabel for="conceptHeadingFive" class="ms-2">Heading Five</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptHeadingFive')">
-              {{ getErrorMessage('conceptHeadingFive') }}
-            </c-form-feedback>
-          </c-col>
-
-          <c-col [cFormFloating]="true" md="9">
-            <textarea cFormControl id="conceptParaFive" formControlName="conceptParaFive" placeholder="Paragraph Five"></textarea>
-            <label cLabel for="conceptParaFive" class="ms-2">Paragraph Five</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptParaFive')">
-              {{ getErrorMessage('conceptParaFive') }}
-            </c-form-feedback>
-          </c-col>
-
-          <!-- Section Six -->
-          <c-col [cFormFloating]="true" md="3">
-            <input cFormControl id="conceptHeadingSix" formControlName="conceptHeadingSix" type="text" placeholder="Heading Six" />
-            <label cLabel for="conceptHeadingSix" class="ms-2">Heading Six</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptHeadingSix')">
-              {{ getErrorMessage('conceptHeadingSix') }}
-            </c-form-feedback>
-          </c-col>
-
-          <c-col [cFormFloating]="true" md="9">
-            <textarea cFormControl id="conceptParaSix" formControlName="conceptParaSix" placeholder="Paragraph Six"></textarea>
-            <label cLabel for="conceptParaSix" class="ms-2">Paragraph Six</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptParaSix')">
-              {{ getErrorMessage('conceptParaSix') }}
-            </c-form-feedback>
-          </c-col>
-
-          <!-- Section Seven -->
-          <c-col [cFormFloating]="true" md="3">
-            <input cFormControl id="conceptHeadingSeven" formControlName="conceptHeadingSeven" type="text" placeholder="Heading Seven" />
-            <label cLabel for="conceptHeadingSeven" class="ms-2">Heading Seven</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptHeadingSeven')">
-              {{ getErrorMessage('conceptHeadingSeven') }}
-            </c-form-feedback>
-          </c-col>
-
-          <c-col [cFormFloating]="true" md="9">
-            <textarea cFormControl id="conceptParaSeven" formControlName="conceptParaSeven" placeholder="Paragraph Seven"></textarea>
-            <label cLabel for="conceptParaSeven" class="ms-2">Paragraph Seven</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('conceptParaSeven')">
-              {{ getErrorMessage('conceptParaSeven') }}
-            </c-form-feedback>
+                  <c-col [cFormFloating]="true" md="8">
+                    <textarea
+                      cFormControl
+                      [id]="'paragraph_' + i"
+                      formControlName="paragraph"
+                      placeholder="Paragraph"
+                      rows="4">
+                    </textarea>
+                    <label cLabel [for]="'paragraph_' + i" class="ms-2">Paragraph</label>
+                    <c-form-feedback [valid]="false" *ngIf="isItemFieldInvalid(i, 'paragraph')">
+                      This field is required
+                    </c-form-feedback>
+                  </c-col>
+                </c-row>
+              </div>
+            </div>
           </c-col>
 
           <!-- Form Actions -->
           <c-col xs="12">
-            <button cButton class="me-1" color="primary" type="submit" [disabled]="loading">
-              {{ loading ? 'Saving...' : 'Update Concept' }}
-            </button>
-            <button (click)="onCancel()" cButton color="secondary" type="button" [disabled]="loading">
-              Cancel
-            </button>
+            <div class="d-flex gap-2">
+              <button cButton class="me-1" color="primary" type="submit" [disabled]="loading">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                {{ loading ? 'Saving...' : 'Save Concept' }}
+              </button>
+              <button (click)="onReset()" cButton color="secondary" type="button" [disabled]="loading">
+                Reset Form
+              </button>
+              <button (click)="loadExistingConcept()" cButton color="info" type="button" [disabled]="loading">
+                Load Existing
+              </button>
+            </div>
           </c-col>
         </form>
       </c-card-body>
