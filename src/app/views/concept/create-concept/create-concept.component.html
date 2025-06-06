@@ -50,14 +50,14 @@
           <!-- Dynamic Concept Items -->
           <c-col xs="12" *ngIf="!loading || submitted">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5>Concept Items ({{ conceptItems.length }}/8)</h5>
+              <h5>Concept Items ({{ conceptItems.length }}/7)</h5>
               <button
                 type="button"
                 cButton
                 color="success"
                 size="sm"
                 (click)="addConceptItem()"
-                [disabled]="conceptItems.length >= 8 || loading">
+                [disabled]="conceptItems.length >= 7 || loading">
                 <i class="fas fa-plus me-1"></i>
                 Add Item
               </button>

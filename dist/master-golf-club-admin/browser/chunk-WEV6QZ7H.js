@@ -52,7 +52,7 @@ import{a as te}from"./chunk-HWW645Z7.js";import"./chunk-AUROHWJP.js";import{a as
             `),i(13,"div",24),e(14,`
               `),m(15,de,37,13,"div",25),e(16,`
             `),o(),e(17,`
-          `),o()}if(c&2){let r=p();s(5),I("Concept Items (",r.conceptItems.length,"/8)"),s(2),l("disabled",r.conceptItems.length>=8||r.loading),s(8),l("ngForOf",r.conceptItems.controls)}}function pe(c,d){c&1&&f(0,"span",37)}function ge(c,d){if(c&1){let r=v();i(0,"button",38),b("click",function(){C(r);let t=p(2);return _(t.loadConceptData())}),e(1,`
+          `),o()}if(c&2){let r=p();s(5),I("Concept Items (",r.conceptItems.length,"/7)"),s(2),l("disabled",r.conceptItems.length>=7||r.loading),s(8),l("ngForOf",r.conceptItems.controls)}}function pe(c,d){c&1&&f(0,"span",37)}function ge(c,d){if(c&1){let r=v();i(0,"button",38),b("click",function(){C(r);let t=p(2);return _(t.loadConceptData())}),e(1,`
                 `),f(2,"i",39),e(3,`
                 Refresh
               `),o()}if(c&2){let r=p(2);l("disabled",r.loading)}}function ue(c,d){if(c&1&&(i(0,"c-col",1),e(1,`
