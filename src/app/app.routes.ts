@@ -75,6 +75,10 @@ export const routes: Routes = [
         path: 'memberEnquiry',
         loadChildren: () => import('./views/memberEnquiry/routes').then((m) => m.memberEnquiryRoutes)
       },
+      {
+        path: 'amenities',
+        loadChildren: () => import('./views/amenities/routes').then((m) => m.amenitiesRoutes)
+      },
     ]
   },
   { path: '**', redirectTo: 'dashboard' }

@@ -7,37 +7,65 @@ import axios from 'axios';
 })
 export class CourseService {
   private apiUrl: string;
-  private lists: string;
-  private processing: string;
-  private deletion: string;
-  private amenities: string;
 
   constructor() {
     this.apiUrl = new BaseAPIUrl().getUrl(baseURLType);
-    this.lists = this.apiUrl + "course/0/listing/";
-    this.processing = this.apiUrl + "course/0/processing/";
-    this.deletion = this.apiUrl + "course/0/deletion/";
-    this.amenities = this.apiUrl + "amenities/";
   }
 
+  // Get course list or single course
   listCourse(id: string = '0') {
-    return axios.get(this.lists.replace('0', id));
+    return axios.get(`${this.apiUrl}course/${id}/listing/`);
   }
 
+  // Create or update course
   processCourse(data: any, id: string = '0') {
     const config = {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     };
-    return axios.post(this.processing.replace('0', id), data, config);
+    return axios.post(`${this.apiUrl}course/${id}/processing/`, data, config);
   }
 
+  // Delete course (soft delete)
   deleteCourse(id: string) {
-    return axios.get(this.deletion.replace('0', id));
+    return axios.get(`${this.apiUrl}course/${id}/deletion/`);
   }
 
+  // Get amenities using the list_all custom action
   getAmenities() {
-    return axios.get(this.amenities);
+    return axios.get(`${this.apiUrl}amenities/list_all/`);
+  }
+
+  // Get courses formatted for collection component
+  getCollectionData() {
+    return axios.get(`${this.apiUrl}course/collection_data/`);
+  }
+
+  // Search courses
+  searchCourses(params: {
+    q?: string;
+    location?: string;
+    amenities?: number[]
+  }) {
+    const queryParams = new URLSearchParams();
+
+    if (params.q) queryParams.append('q', params.q);
+    if (params.location) queryParams.append('location', params.location);
+    if (params.amenities && params.amenities.length > 0) {
+      params.amenities.forEach(id => queryParams.append('amenities[]', id.toString()));
+    }
+
+    return axios.get(`${this.apiUrl}course/search/?${queryParams.toString()}`);
+  }
+
+  // Get single course by ID (alternative method)
+  getCourse(id: string) {
+    return this.listCourse(id);
+  }
+
+  // Get all courses
+  getAllCourses() {
+    return this.listCourse('0');
   }
 }
