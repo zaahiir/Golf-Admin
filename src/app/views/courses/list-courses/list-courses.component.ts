@@ -10,11 +10,22 @@ import Swal from 'sweetalert2';
 
 interface CourseInterface {
   id: number;
-  courseName: string;
-  town: string;
-  phoneNumber: string;
-  website: string;
-  golfLocation: string;
+  name?: string;           // From CourseDetailSerializer
+  courseName?: string;     // From direct model field
+  address?: string;        // From CourseDetailSerializer
+  courseAddress?: string;  // From direct model field
+  phone?: string;          // From CourseDetailSerializer
+  coursePhoneNumber?: string; // From direct model field
+  website?: string;        // From CourseDetailSerializer
+  courseWebsite?: string;  // From direct model field
+  location?: string;       // From CourseDetailSerializer
+  courseLocation?: string; // From direct model field
+  timing?: string;         // From CourseDetailSerializer
+  courseOpenFrom?: string; // From direct model field
+  description?: string;    // From CourseDetailSerializer
+  courseDescription?: string; // From direct model field
+  imageUrl?: string;       // From serializer method
+  amenities?: number[];    // From serializer method
 }
 
 @Component({
@@ -106,16 +117,51 @@ export class ListCoursesComponent implements OnInit {
     this.updatePageRange();
   }
 
+  // Helper methods to safely get field values
+  getCourseName(course: CourseInterface): string {
+    return course.name || course.courseName || 'N/A';
+  }
+
+  getCourseAddress(course: CourseInterface): string {
+    return course.address || course.courseAddress || 'N/A';
+  }
+
+  getCoursePhone(course: CourseInterface): string {
+    return course.phone || course.coursePhoneNumber || 'N/A';
+  }
+
+  getCourseWebsite(course: CourseInterface): string {
+    return course.website || course.courseWebsite || 'N/A';
+  }
+
+  getCourseLocation(course: CourseInterface): string {
+    return course.location || course.courseLocation || 'N/A';
+  }
+
+  getCourseTiming(course: CourseInterface): string {
+    return course.timing || course.courseOpenFrom || 'N/A';
+  }
+
+  // Extract town from address (first part before comma)
+  getTownFromAddress(course: CourseInterface): string {
+    const address = this.getCourseAddress(course);
+    if (address && address !== 'N/A') {
+      const parts = address.split(',');
+      return parts[0].trim();
+    }
+    return 'N/A';
+  }
+
   get paginatedCourseList() {
     let filtered = this.courseList;
     if (this.searchTerm) {
       const searchTermLower = this.searchTerm.toLowerCase();
       filtered = this.courseList.filter(course =>
-        course.courseName.toLowerCase().includes(searchTermLower) ||
-        course.town.toLowerCase().includes(searchTermLower) ||
-        course.phoneNumber.toLowerCase().includes(searchTermLower) ||
-        course.website.toLowerCase().includes(searchTermLower) ||
-        course.golfLocation.toLowerCase().includes(searchTermLower)
+        this.getCourseName(course).toLowerCase().includes(searchTermLower) ||
+        this.getTownFromAddress(course).toLowerCase().includes(searchTermLower) ||
+        this.getCoursePhone(course).toLowerCase().includes(searchTermLower) ||
+        this.getCourseWebsite(course).toLowerCase().includes(searchTermLower) ||
+        this.getCourseLocation(course).toLowerCase().includes(searchTermLower)
       );
     }
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
@@ -125,11 +171,11 @@ export class ListCoursesComponent implements OnInit {
   get totalPages() {
     const filteredLength = this.searchTerm ?
       this.courseList.filter(course =>
-        course.courseName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        course.town.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        course.phoneNumber.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        course.website.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        course.golfLocation.toLowerCase().includes(this.searchTerm.toLowerCase())
+        this.getCourseName(course).toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        this.getTownFromAddress(course).toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        this.getCoursePhone(course).toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        this.getCourseWebsite(course).toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        this.getCourseLocation(course).toLowerCase().includes(this.searchTerm.toLowerCase())
       ).length :
       this.courseList.length;
     return Math.ceil(filteredLength / this.itemsPerPage);

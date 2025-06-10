@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { NgStyle, NgClass, NgForOf, NgIf, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import {
   RowComponent,
   ColComponent,
@@ -13,6 +14,7 @@ import {
   FormLabelDirective,
   FormControlDirective,
   FormFeedbackComponent,
+  FormSelectDirective,
   ButtonDirective,
   ButtonModule
 } from '@coreui/angular';
@@ -22,28 +24,31 @@ import { CourseService } from '../../common-service/course/course.service';
 
 interface Amenity {
   id: number;
-  title: string;
-  tooltip: string;
-  icon: string;
+  amenityName: string;
+  amenityTooltip: string;
+  title: string;  // For frontend compatibility
+  tooltip: string;  // For frontend compatibility
+  icon_svg?: string;
+  icon_path?: string;
+  viewbox?: string;
+  icon?: string;  // Fallback for old implementations
 }
 
 interface CourseData {
   id?: number;
-  name: string;
-  courseNumber?: string;
-  lane: string;
-  locality: string;
-  town: string;
-  code: string;
-  country: string;
-  phone: string;
-  website?: string;
-  timing?: string;
+  courseName: string;
+  courseAddress: string;
+  courseOpenFrom?: string;
+  coursePhoneNumber: string;
+  courseAlternatePhoneNumber?: string;
+  courseWebsite?: string;
+  courseDescription?: string;
+  courseLocation: string;
+  courseImage?: string;
+  courseAmenities: number[];
+  hideStatus: number;
   imageUrl?: string;
-  golfDescription?: string;
-  golfHighlight?: string;
-  golfLocation: string;
-  amenities: number[];
+  amenities?: number[];  // Alternative field name for compatibility
 }
 
 @Component({
@@ -66,6 +71,7 @@ interface CourseData {
     FormLabelDirective,
     FormControlDirective,
     FormFeedbackComponent,
+    FormSelectDirective,
     ButtonDirective,
     ButtonModule
   ],
@@ -88,7 +94,8 @@ export class CreateCoursesComponent implements OnInit {
     private formBuilder: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
-    private courseService: CourseService
+    private courseService: CourseService,
+    private domSanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -109,7 +116,11 @@ export class CreateCoursesComponent implements OnInit {
     try {
       const response = await this.courseService.getAmenities();
       if (response.data && response.data.code === 1) {
-        this.amenitiesList = response.data.data;
+        this.amenitiesList = response.data.data.map((amenity: any) => ({
+          ...amenity,
+          title: amenity.amenityName || amenity.title,
+          tooltip: amenity.amenityTooltip || amenity.tooltip || amenity.amenityName
+        }));
         console.log('Loaded amenities:', this.amenitiesList);
       } else {
         console.warn('Unexpected amenities response format:', response.data);
@@ -139,28 +150,26 @@ export class CreateCoursesComponent implements OnInit {
 
         // Map the response data to form fields
         this.golfCourseForm.patchValue({
-          courseName: courseData.name || '',
-          courseNumber: courseData.courseNumber || '',
-          streetName: courseData.lane || '',
-          locality: courseData.locality || '',
-          town: courseData.town || '',
-          postcode: courseData.code || '',
-          country: courseData.country || '',
-          phoneNumber: courseData.phone || '',
-          website: courseData.website || '',
-          timing: courseData.timing || '',
-          golfDescription: courseData.golfDescription || '',
-          golfHighlight: courseData.golfHighlight || '',
-          golfLocation: courseData.golfLocation || ''
+          courseName: courseData.courseName || '',
+          courseAddress: courseData.courseAddress || '',
+          courseOpenFrom: courseData.courseOpenFrom || '',
+          coursePhoneNumber: courseData.coursePhoneNumber || '',
+          courseAlternatePhoneNumber: courseData.courseAlternatePhoneNumber || '',
+          courseWebsite: courseData.courseWebsite || '',
+          courseDescription: courseData.courseDescription || '',
+          courseLocation: courseData.courseLocation || '',
+          hideStatus: courseData.hideStatus || 0
         });
 
-        // Set selected amenities
-        this.selectedAmenities = courseData.amenities || [];
-        this.golfCourseForm.patchValue({ amenities: this.selectedAmenities });
+        // Set selected amenities - handle both possible field names
+        this.selectedAmenities = courseData.courseAmenities || courseData.amenities || [];
+        this.golfCourseForm.patchValue({ courseAmenities: this.selectedAmenities });
 
         // Set image preview if exists
         if (courseData.imageUrl && !courseData.imageUrl.includes('default-course.jpg')) {
           this.imagePreview = courseData.imageUrl;
+        } else if (courseData.courseImage && !courseData.courseImage.includes('default-course.jpg')) {
+          this.imagePreview = courseData.courseImage;
         }
       }
     } catch (error) {
@@ -179,19 +188,14 @@ export class CreateCoursesComponent implements OnInit {
   private initializeForm(): void {
     this.golfCourseForm = this.formBuilder.group({
       courseName: ['', [Validators.required, Validators.minLength(2)]],
-      courseNumber: [''],
-      streetName: ['', [Validators.required]],
-      locality: ['', [Validators.required]],
-      town: ['', [Validators.required]],
-      postcode: ['', [Validators.required]],
-      country: ['', [Validators.required]],
-      phoneNumber: ['', [Validators.required, Validators.pattern(/^[\+]?[\d\s\-\(\)]+$/)]],
-      website: ['', [Validators.pattern(/^https?:\/\/.+/)]],
-      timing: [''],
-      amenities: [[], [Validators.required, Validators.minLength(1)]],
-      golfDescription: [''],
-      golfHighlight: [''],
-      golfLocation: ['', [Validators.required]],
+      courseAddress: ['', [Validators.required]],
+      courseOpenFrom: [''],
+      coursePhoneNumber: ['', [Validators.required, Validators.pattern(/^[\+]?[\d\s\-\(\)]+$/)]],
+      courseAlternatePhoneNumber: ['', [Validators.pattern(/^[\+]?[\d\s\-\(\)]+$/)]],
+      courseWebsite: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+      courseDescription: [''],
+      courseLocation: ['', [Validators.required]],
+      courseAmenities: [[], [Validators.required, Validators.minLength(1)]],
       courseImage: [null],
       hideStatus: [0]
     });
@@ -249,14 +253,19 @@ export class CreateCoursesComponent implements OnInit {
       this.selectedAmenities.splice(index, 1);
     }
 
-    this.golfCourseForm.patchValue({ amenities: this.selectedAmenities });
-    this.golfCourseForm.get('amenities')?.markAsTouched();
+    this.golfCourseForm.patchValue({ courseAmenities: this.selectedAmenities });
+    this.golfCourseForm.get('courseAmenities')?.markAsTouched();
   }
 
   // Helper method to get amenity title by ID
   getAmenityTitle(amenityId: number): string {
     const amenity = this.amenitiesList.find(a => a.id === amenityId);
     return amenity ? amenity.title : `Amenity ${amenityId}`;
+  }
+
+  // Helper method to safely render HTML (for SVG icons)
+  getSafeHtml(html: string): SafeHtml {
+    return this.domSanitizer.bypassSecurityTrustHtml(html);
   }
 
   get f() {
@@ -287,18 +296,22 @@ export class CreateCoursesComponent implements OnInit {
       // Create FormData object to handle file upload
       const formData = new FormData();
 
-      // Add all form fields to FormData (excluding courseImage and amenities)
-      Object.keys(this.golfCourseForm.value).forEach(key => {
-        if (key !== 'courseImage' && key !== 'amenities') {
-          const value = this.golfCourseForm.value[key];
-          if (value !== null && value !== undefined && value !== '') {
-            formData.append(key, value);
-          }
-        }
-      });
+      // Add all form fields to FormData (matching backend field names)
+      const formValues = this.golfCourseForm.value;
+
+      // Add course fields
+      formData.append('courseName', formValues.courseName || '');
+      formData.append('courseAddress', formValues.courseAddress || '');
+      formData.append('courseOpenFrom', formValues.courseOpenFrom || '');
+      formData.append('coursePhoneNumber', formValues.coursePhoneNumber || '');
+      formData.append('courseAlternatePhoneNumber', formValues.courseAlternatePhoneNumber || '');
+      formData.append('courseWebsite', formValues.courseWebsite || '');
+      formData.append('courseDescription', formValues.courseDescription || '');
+      formData.append('courseLocation', formValues.courseLocation || '');
+      formData.append('hideStatus', formValues.hideStatus.toString());
 
       // Add amenities as JSON string (as expected by backend)
-      formData.append('amenities', JSON.stringify(this.selectedAmenities));
+      formData.append('courseAmenities', JSON.stringify(this.selectedAmenities));
 
       // Add the file if selected
       if (this.selectedFile) {
@@ -397,7 +410,7 @@ export class CreateCoursesComponent implements OnInit {
     this.selectedFile = null;
     this.golfCourseForm.reset({
       hideStatus: 0,
-      amenities: []
+      courseAmenities: []
     });
 
     // If in edit mode, reload the data
@@ -419,15 +432,23 @@ export class CreateCoursesComponent implements OnInit {
 
     if (errors['required']) {
       switch (fieldName) {
-        case 'amenities':
+        case 'courseAmenities':
           return 'Please select at least one amenity';
+        case 'courseName':
+          return 'Course name is required';
+        case 'courseAddress':
+          return 'Course address is required';
+        case 'coursePhoneNumber':
+          return 'Phone number is required';
+        case 'courseLocation':
+          return 'Course location is required';
         default:
           return 'This field is required';
       }
     }
 
     if (errors['minlength']) {
-      if (fieldName === 'amenities') {
+      if (fieldName === 'courseAmenities') {
         return 'Please select at least one amenity';
       }
       return `Minimum length is ${errors['minlength'].requiredLength} characters`;
@@ -435,9 +456,10 @@ export class CreateCoursesComponent implements OnInit {
 
     if (errors['pattern']) {
       switch (fieldName) {
-        case 'phoneNumber':
+        case 'coursePhoneNumber':
+        case 'courseAlternatePhoneNumber':
           return 'Invalid phone number format';
-        case 'website':
+        case 'courseWebsite':
           return 'Invalid website URL format (must start with http:// or https://)';
         default:
           return 'Invalid format';
