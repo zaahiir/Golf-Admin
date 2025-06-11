@@ -38,13 +38,13 @@
     <ul cDropdownMenu class="pt-0 w-auto">
       <li></li>
       <li>
-        <a cDropdownItem routerLink="">
+        <a cDropdownItem routerLink="/profile">
           <svg cIcon class="me-2" name="cilUser"></svg>
           Profile
         </a>
       </li>
       <li>
-        <a cDropdownItem routerLink="">
+        <a cDropdownItem routerLink="/settings">
           <svg cIcon class="me-2" name="cilSettings"></svg>
           Settings
         </a>
@@ -53,7 +53,13 @@
         <hr cDropdownDivider />
       </li>
       <li>
-        <a cDropdownItem routerLink="">
+        <a
+          cDropdownItem
+          (click)="onLogout()"
+          style="cursor: pointer;"
+          data-logout-btn
+          [attr.disabled]="false"
+        >
           <svg cIcon class="me-2" name="cilAccountLogout"></svg>
           Logout
         </a>
