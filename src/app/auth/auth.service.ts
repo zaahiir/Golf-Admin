@@ -26,7 +26,8 @@ export class AuthService {
 
   logout(): Observable<any> {
     const refreshToken = localStorage.getItem('refresh_token');
-    return this.http.post('http://localhost:8000/apis/logout/', {
+    // return this.http.post('http://localhost:8000/apis/logout/', {
+    return this.http.post('https://mastergolfclub.com/apis/logout/', {
       refresh_token: refreshToken
     });
   }
