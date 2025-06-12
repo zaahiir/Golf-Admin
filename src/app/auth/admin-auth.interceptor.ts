@@ -20,14 +20,11 @@ export class AdminAuthInterceptor implements HttpInterceptor {
     // Clone the request and add the authorization header if token exists
     let authReq = req;
     if (authToken && this.authService.isAdmin()) {
+      // Only add essential headers to avoid CORS issues
       authReq = req.clone({
         setHeaders: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-          // Add cache control headers to prevent caching of authenticated requests
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
         }
       });
     }

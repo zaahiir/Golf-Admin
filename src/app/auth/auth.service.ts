@@ -71,22 +71,40 @@ export class AuthService {
   logout(): Observable<any> {
     const refreshToken = this.getStorageItem('refresh_token');
 
-    // Send logout request to backend with proper payload
-    return this.http.post(`${this.apiUrl}logout/`, { refresh_token: refreshToken })
-      .pipe(
-        tap(() => {
-          // Clear all localStorage items after successful logout
-          this.performCompleteLogout();
-        }),
-        catchError((error) => {
-          // Even if the server request fails, clear user data
-          this.performCompleteLogout();
-          return throwError(() => error);
-        })
-      );
+    if (!refreshToken) {
+      // No refresh token, just clear local data
+      this.performCompleteLogout();
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    // Create request with minimal headers to avoid CORS issues
+    const logoutRequest = this.http.post(`${this.apiUrl}logout/`,
+      { refresh_token: refreshToken },
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    return logoutRequest.pipe(
+      tap(() => {
+        // Clear all localStorage items after successful logout
+        this.performCompleteLogout();
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Logout API error:', error);
+        // Even if the server request fails, clear user data
+        this.performCompleteLogout();
+
+        // Don't throw the error, consider logout successful
+        // since we've cleared the local data
+        return throwError(() => error);
+      })
+    );
   }
 
-  // Complete logout process for admin - UPDATED VERSION
+  // Complete logout process for admin - ENHANCED VERSION
   performLogout(): void {
     const refreshToken = this.getStorageItem('refresh_token');
 
@@ -98,8 +116,8 @@ export class AuthService {
         },
         error: (error) => {
           console.error('Admin logout error:', error);
-          // Even if backend logout fails, clear local tokens
-          this.performCompleteLogout();
+          // Even if backend logout fails, we've already cleared local tokens
+          // in the logout() method's error handler
         }
       });
     } else {

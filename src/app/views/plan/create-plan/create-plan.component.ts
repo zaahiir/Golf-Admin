@@ -131,7 +131,7 @@ export class CreatePlanComponent implements OnInit {
           icon: 'success',
           confirmButtonText: 'Ok'
         });
-        this.router.navigate(['/plans']);
+        this.router.navigate(['/plan']);
       } else {
         throw new Error(response.data?.message || 'Failed to create plan');
       }

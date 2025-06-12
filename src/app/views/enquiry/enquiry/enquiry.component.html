@@ -16,8 +16,7 @@
         <thead>
           <tr>
             <th scope="col">S.No</th>
-            <th scope="col">First Name</th>
-            <th scope="col">Last Name</th>
+            <th scope="col">Name</th>
             <th scope="col">Phone Number</th>
             <th scope="col">Email</th>
             <th scope="col">Message</th>
@@ -28,8 +27,7 @@
         <tbody>
           <tr *ngFor="let enquiry of paginatedEnquiryList; let i = index">
             <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
-            <td>{{ enquiry.contactEnquiryFirstName }}</td>
-            <td>{{ enquiry.contactEnquiryLastName }}</td>
+            <td>{{ enquiry.contactEnquiryFirstName + ' ' + enquiry.contactEnquiryLastName }}</td>
             <td>{{ enquiry.contactEnquiryPhoneNumber }}</td>
             <td>{{ enquiry.contactEnquiryEmail }}</td>
             <td>{{ enquiry.contactEnquiryMessage }}</td>
