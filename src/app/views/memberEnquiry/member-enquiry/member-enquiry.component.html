@@ -41,7 +41,7 @@
               <td>
                 <a
                   cButton
-                  [routerLink]="['/member-enquiry/update', enquiry.id]"
+                  (click)="convertToMember(enquiry.id)"
                   color="btn-transparent"
                   class="btn-sm text-primary border-0 py-0"
                   [cTooltip]="tooltipEditText"
@@ -62,7 +62,7 @@
               </td>
             </tr>
             <tr *ngIf="paginatedMemberEnquiryList.length === 0">
-              <td colspan="9" class="text-center py-4">
+              <td colspan="7" class="text-center py-4">
                 {{ isLoading ? 'Loading...' : 'No enquiries found' }}
               </td>
             </tr>

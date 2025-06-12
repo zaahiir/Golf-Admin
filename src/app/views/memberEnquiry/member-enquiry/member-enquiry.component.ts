@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { cilPen, cilTrash } from '@coreui/icons';
 import { IconDirective } from '@coreui/icons-angular';
 import { FormsModule } from '@angular/forms';
@@ -28,7 +28,7 @@ interface MemberEnquiryInterface {
   memberEnquiryLastName: string;
   memberEnquiryPhoneNumber: string;
   memberEnquiryEmail: string;
-  memberEnquiryTown: string;
+  memberEnquiryMessage: string;
 }
 
 @Component({
@@ -57,7 +57,7 @@ interface MemberEnquiryInterface {
 })
 export class MemberEnquiryComponent implements OnInit {
   icons = { cilPen, cilTrash };
-  tooltipEditText = 'Edit';
+  tooltipEditText = 'Convert to Member';
   tooltipDeleteText = 'Delete';
 
   memberEnquiryList: MemberEnquiryInterface[] = [];
@@ -68,7 +68,10 @@ export class MemberEnquiryComponent implements OnInit {
   isLoading = false;
   searchTerm: string = '';
 
-  constructor(private memberEnquiryService: MemberEnquiryService) {}
+  constructor(
+    private memberEnquiryService: MemberEnquiryService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.loadMemberEnquiryList();
@@ -94,6 +97,14 @@ export class MemberEnquiryComponent implements OnInit {
     }
   }
 
+  // New method to handle conversion to member
+  convertToMember(enquiryId: number) {
+    // Navigate to create member page with enquiry ID as query parameter
+    this.router.navigate(['/members/add'], {
+      queryParams: { enquiryId: enquiryId }
+    });
+  }
+
   filterList() {
     if (!this.searchTerm) {
       this.filteredList = [...this.memberEnquiryList];
@@ -107,8 +118,7 @@ export class MemberEnquiryComponent implements OnInit {
         (enquiry.memberEnquiryPlan || '').toLowerCase(),
         fullName,
         (enquiry.memberEnquiryPhoneNumber || '').toLowerCase(),
-        (enquiry.memberEnquiryEmail || '').toLowerCase(),
-        (enquiry.memberEnquiryTown || '').toLowerCase()
+        (enquiry.memberEnquiryEmail || '').toLowerCase()
       ];
 
       return searchableFields.some(field => field.includes(searchTermLower));

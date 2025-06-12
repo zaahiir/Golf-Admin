@@ -3,8 +3,9 @@ import { NgForOf, NgIf, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RowComponent, ColComponent, TextColorDirective, CardComponent, CardHeaderComponent, CardBodyComponent, FormFloatingDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, ButtonDirective } from '@coreui/angular';
 import Swal from 'sweetalert2';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MemberService } from '../../common-service/member/member.service';
+import { MemberEnquiryService } from '../../common-service/memberEnquiry/member-enquiry.service';
 
 interface Gender {
   id: number;
@@ -29,6 +30,17 @@ interface PaymentMethod {
 interface Plan {
   id: number;
   planName: string;
+}
+
+interface MemberEnquiry {
+  id: number;
+  memberEnquiryDate: string;
+  memberEnquiryPlan: any;
+  memberEnquiryFirstName: string;
+  memberEnquiryLastName: string;
+  memberEnquiryPhoneNumber: string;
+  memberEnquiryEmail: string;
+  memberEnquiryMessage: string;
 }
 
 @Component({
@@ -58,10 +70,17 @@ export class CreateMemberComponent implements OnInit {
   paymentMethods: PaymentMethod[] = [];
   plans: Plan[] = [];
 
+  // New properties for enquiry handling
+  enquiryId: string | null = null;
+  isFromEnquiry = false;
+  pageTitle = 'New Member Profile';
+
   constructor(
     private fb: FormBuilder,
     private memberService: MemberService,
-    private router: Router
+    private memberEnquiryService: MemberEnquiryService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.initializeForm();
   }
@@ -71,28 +90,31 @@ export class CreateMemberComponent implements OnInit {
 
     this.memberForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: [''],
       email: ['', [Validators.required, Validators.email]],
       password: [''],
-      phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      phoneNumber: ['', [Validators.required]],
       alternatePhoneNumber: [''],
       dateOfBirth: ['', [Validators.required]],
-      gender: ['', [Validators.required]],
-      nationality: ['', [Validators.required]],
-      address: ['', [Validators.required]],
-      plan: ['', [Validators.required]],
+      gender: [''],
+      nationality: [''],
+      address: [''],
+      plan: [''],
       membershipStartDate: [currentDate, [Validators.required]],
       membershipEndDate: [''],
-      emergencyContactName: ['', [Validators.required]],
-      emergencyContactPhone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      emergencyContactRelation: ['', [Validators.required]],
-      paymentStatus: ['', [Validators.required]],
-      paymentMethod: ['', [Validators.required]],
+      emergencyContactName: [''],
+      emergencyContactPhone: [''],
+      emergencyContactRelation: [''],
+      paymentStatus: [''],
+      paymentMethod: [''],
       referredBy: [''],
       profilePhoto: [''],
       idProof: [''],
       handicap: [false],
-      golfClubId: ['']
+      golfClubId: [''],
+      // New fields for enquiry data
+      enquiryId: [''],
+      enquiryMessage: ['']
     });
   }
 
@@ -125,9 +147,54 @@ export class CreateMemberComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
+      // Check if this is from enquiry conversion
+      this.route.queryParams.subscribe(params => {
+        if (params['enquiryId']) {
+          this.enquiryId = params['enquiryId'];
+          this.isFromEnquiry = true;
+          this.pageTitle = 'Convert Enquiry to Member';
+        }
+      });
+
       await this.loadDropdownData();
+
+      // Load enquiry data if coming from enquiry conversion
+      if (this.isFromEnquiry && this.enquiryId) {
+        await this.loadEnquiryData();
+      }
     } catch (error) {
       await this.showError('Failed to load form data');
+    }
+  }
+
+  private async loadEnquiryData(): Promise<void> {
+    try {
+      console.log('Loading enquiry data for ID:', this.enquiryId);
+      const response = await this.memberEnquiryService.listMemberEnquiry(this.enquiryId!);
+
+      if (response?.data?.code === 1 && response.data.data && response.data.data.length > 0) {
+        const enquiryData: MemberEnquiry = response.data.data[0];
+        console.log('Enquiry data loaded:', enquiryData);
+
+        // Pre-fill form with enquiry data
+        this.memberForm.patchValue({
+          firstName: enquiryData.memberEnquiryFirstName || '',
+          lastName: enquiryData.memberEnquiryLastName || '',
+          email: enquiryData.memberEnquiryEmail || '',
+          phoneNumber: enquiryData.memberEnquiryPhoneNumber || '',
+          plan: enquiryData.memberEnquiryPlan || '',
+          enquiryId: this.enquiryId,
+          enquiryMessage: enquiryData.memberEnquiryMessage || ''
+        });
+
+        console.log('Form patched with enquiry data');
+      } else {
+        console.error('Failed to load enquiry data or no data found');
+        await this.showError('Failed to load enquiry data');
+      }
+    } catch (error) {
+      console.error('Error loading enquiry data:', error);
+      await this.showError('Failed to load enquiry data');
     }
   }
 
@@ -236,7 +303,6 @@ export class CreateMemberComponent implements OnInit {
       console.log('Generated Golf Club ID:', generatedMemberId);
       const generatedPassword = this.generatePassword();
 
-
       // Create FormData
       const formData = new FormData();
 
@@ -278,12 +344,19 @@ export class CreateMemberComponent implements OnInit {
       console.log('Server response:', response);
 
       if (response?.data?.code === 1) {
+        let successMessage = `Member has been created successfully with Golf Club ID: ${generatedMemberId}. Login credentials have been sent to their email.`;
+
+        if (this.isFromEnquiry) {
+          successMessage = `Enquiry has been successfully converted to member with Golf Club ID: ${generatedMemberId}. Login credentials have been sent to their email.`;
+        }
+
         await Swal.fire({
           title: 'Success!',
-          text: `Member has been created successfully with Golf Club ID: ${generatedMemberId}, Login credentials have been sent to their email.`,
+          text: successMessage,
           icon: 'success',
           confirmButtonText: 'Ok'
         });
+
         this.router.navigate(['/members']);
       } else {
         throw new Error(response?.data?.message || 'Failed to create member');
@@ -354,6 +427,11 @@ export class CreateMemberComponent implements OnInit {
       membershipStartDate: new Date().toISOString().split('T')[0],
       handicap: false
     });
+
+    // If from enquiry, reload the enquiry data
+    if (this.isFromEnquiry && this.enquiryId) {
+      this.loadEnquiryData();
+    }
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -377,5 +455,14 @@ export class CreateMemberComponent implements OnInit {
 
   private async showError(message: string): Promise<void> {
     await Swal.fire('Error', message, 'error');
+  }
+
+  // Method to cancel and go back (useful when converting from enquiry)
+  onCancel(): void {
+    if (this.isFromEnquiry) {
+      this.router.navigate(['/member-enquiry']);
+    } else {
+      this.router.navigate(['/members']);
+    }
   }
 }
