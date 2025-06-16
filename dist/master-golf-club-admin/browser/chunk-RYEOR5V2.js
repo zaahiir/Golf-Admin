@@ -1,0 +1,1 @@
+import"./chunk-AAPNLDO3.js";var e=[{path:"",data:{title:"Enquiries"},children:[{path:"",loadComponent:()=>import("./chunk-TFD6BTTF.js").then(t=>t.EnquiryComponent),data:{title:"List Enquiries"}}]}];export{e as enquiryRoutes};

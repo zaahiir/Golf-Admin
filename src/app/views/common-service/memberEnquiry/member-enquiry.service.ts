@@ -7,27 +7,26 @@ import axios from 'axios';
 })
 export class MemberEnquiryService {
   private apiUrl: string;
-  private lists: string;
-  private processing: string;
-  private deletion: string;
 
   constructor() {
     this.apiUrl = new BaseAPIUrl().getUrl(baseURLType);
-    this.lists = this.apiUrl + "memberEnquiry/0/listing/";
-    this.processing = this.apiUrl + "memberEnquiry/0/processing/";
-    this.deletion = this.apiUrl + "memberEnquiry/0/deletion/";
   }
 
   listMemberEnquiry(id: string = '0') {
-    return axios.get(this.lists.replace('0', id));
+    // Fixed URL structure to match Django endpoint
+    const url = `${this.apiUrl}memberEnquiry/listing/${id}/`;
+    return axios.get(url);
   }
 
   processMemberEnquiry(data: any, id: string = '0') {
-    return axios.post(this.processing.replace('0', id), data);
+    // Fixed URL structure to match Django endpoint
+    const url = `${this.apiUrl}memberEnquiry/processing/${id}/`;
+    return axios.post(url, data);
   }
 
   deleteMemberEnquiry(id: string) {
-    return axios.get(this.deletion.replace('0', id));
+    // Fixed URL structure to match Django endpoint
+    const url = `${this.apiUrl}memberEnquiry/deletion/${id}/`;
+    return axios.get(url);
   }
 }
-

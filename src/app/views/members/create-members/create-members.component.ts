@@ -61,7 +61,8 @@ export class CreateMemberComponent implements OnInit {
   memberForm!: FormGroup;
   loading = false;
   submitted = false;
-  selectedFile: File | null = null;
+  selectedProfileFile: File | null = null;
+  selectedIdProofFile: File | null = null;
   previewUrl: string | ArrayBuffer | null = null;
 
   genders: Gender[] = [];
@@ -90,17 +91,17 @@ export class CreateMemberComponent implements OnInit {
 
     this.memberForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName: [''],
       email: ['', [Validators.required, Validators.email]],
-      password: [''],
       phoneNumber: ['', [Validators.required]],
-      alternatePhoneNumber: [''],
       dateOfBirth: ['', [Validators.required]],
+      lastName: [''],
+      password: [''],
+      alternatePhoneNumber: [''],
       gender: [''],
       nationality: [''],
       address: [''],
       plan: [''],
-      membershipStartDate: [currentDate, [Validators.required]],
+      membershipStartDate: [currentDate],
       membershipEndDate: [''],
       emergencyContactName: [''],
       emergencyContactPhone: [''],
@@ -112,7 +113,6 @@ export class CreateMemberComponent implements OnInit {
       idProof: [''],
       handicap: [false],
       golfClubId: [''],
-      // New fields for enquiry data
       enquiryId: [''],
       enquiryMessage: ['']
     });
@@ -258,26 +258,30 @@ export class CreateMemberComponent implements OnInit {
     const file = event.target.files[0];
     if (file) {
       if (type === 'profile') {
-        this.selectedFile = file;
+        this.selectedProfileFile = file;
         const reader = new FileReader();
         reader.onload = (e) => {
           this.previewUrl = e.target?.result || null;
         };
         reader.readAsDataURL(file);
-        this.memberForm.patchValue({ profilePhoto: file });
       } else {
-        this.memberForm.patchValue({ idProof: file });
+        this.selectedIdProofFile = file;
       }
     }
   }
 
   removePhoto(type: 'profile' | 'idProof'): void {
     if (type === 'profile') {
-      this.selectedFile = null;
+      this.selectedProfileFile = null;
       this.previewUrl = null;
-      this.memberForm.patchValue({ profilePhoto: '' });
+      // Reset file input
+      const fileInput = document.getElementById('profilePhoto') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     } else {
-      this.memberForm.patchValue({ idProof: '' });
+      this.selectedIdProofFile = null;
+      // Reset file input
+      const fileInput = document.getElementById('idProof') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     }
   }
 
@@ -293,51 +297,117 @@ export class CreateMemberComponent implements OnInit {
           const element = document.querySelector(`[formcontrolname="${firstInvalidField}"]`);
           element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+        await this.showError('Please fill in all required fields correctly.');
         return;
       }
 
       this.loading = true;
 
-      // Generate member ID with MGC prefix
+      // Generate member ID and password
       const generatedMemberId = await this.generateMemberId();
-      console.log('Generated Golf Club ID:', generatedMemberId);
       const generatedPassword = this.generatePassword();
+
+      console.log('Generated Member ID:', generatedMemberId);
+      console.log('Generated Password:', generatedPassword);
 
       // Create FormData
       const formData = new FormData();
 
-      // Set the generated member ID in golfClubId field
-      this.memberForm.patchValue({
-        golfClubId: generatedMemberId,
-        password: generatedPassword
-      });
+      // Get form values
+      const formValues = this.memberForm.value;
 
-      // Log the generated credentials (remove in production)
-      console.log('Generated Member ID:', generatedMemberId);
-      console.log('Generated Password:', generatedPassword);
+      // Add required fields first
+      formData.append('firstName', (formValues.firstName || '').toString().trim());
+      formData.append('email', (formValues.email || '').toString().trim());
+      formData.append('phoneNumber', (formValues.phoneNumber || '').toString().trim());
+      formData.append('dateOfBirth', formValues.dateOfBirth ? new Date(formValues.dateOfBirth).toISOString().split('T')[0] : '');
 
-      // Append all form fields
-      Object.keys(this.memberForm.value).forEach(key => {
-        const value = this.memberForm.get(key)?.value;
-        if (value !== null && value !== undefined) {
-          if (key === 'profilePhoto' && this.selectedFile) {
-            formData.append(key, this.selectedFile);
-          } else if (key === 'idProof' && this.memberForm.get('idProof')?.value instanceof File) {
-            formData.append(key, this.memberForm.get('idProof')?.value);
-          } else if (key === 'dateOfBirth' || key === 'membershipStartDate' || key === 'membershipEndDate') {
-            const dateValue = value ? new Date(value).toISOString().split('T')[0] : '';
-            formData.append(key, dateValue);
-          } else if (typeof value === 'boolean') {
-            formData.append(key, value.toString());
-          } else {
-            formData.append(key, value.toString().trim());
-          }
-        }
-      });
+      // Add generated fields
+      formData.append('golfClubId', generatedMemberId);
+      formData.append('password', generatedPassword);
+
+      // Add optional fields only if they have values
+      if (formValues.lastName && formValues.lastName.trim()) {
+        formData.append('lastName', formValues.lastName.trim());
+      }
+
+      if (formValues.alternatePhoneNumber && formValues.alternatePhoneNumber.trim()) {
+        formData.append('alternatePhoneNumber', formValues.alternatePhoneNumber.trim());
+      }
+
+      if (formValues.gender) {
+        formData.append('gender', formValues.gender.toString());
+      }
+
+      if (formValues.nationality) {
+        formData.append('nationality', formValues.nationality.toString());
+      }
+
+      if (formValues.address && formValues.address.trim()) {
+        formData.append('address', formValues.address.trim());
+      }
+
+      if (formValues.plan) {
+        formData.append('plan', formValues.plan.toString());
+      }
+
+      if (formValues.membershipStartDate) {
+        formData.append('membershipStartDate', new Date(formValues.membershipStartDate).toISOString().split('T')[0]);
+      }
+
+      if (formValues.membershipEndDate) {
+        formData.append('membershipEndDate', new Date(formValues.membershipEndDate).toISOString().split('T')[0]);
+      }
+
+      if (formValues.emergencyContactName && formValues.emergencyContactName.trim()) {
+        formData.append('emergencyContactName', formValues.emergencyContactName.trim());
+      }
+
+      if (formValues.emergencyContactPhone && formValues.emergencyContactPhone.trim()) {
+        formData.append('emergencyContactPhone', formValues.emergencyContactPhone.trim());
+      }
+
+      if (formValues.emergencyContactRelation && formValues.emergencyContactRelation.trim()) {
+        formData.append('emergencyContactRelation', formValues.emergencyContactRelation.trim());
+      }
+
+      if (formValues.paymentStatus) {
+        formData.append('paymentStatus', formValues.paymentStatus.toString());
+      }
+
+      if (formValues.paymentMethod) {
+        formData.append('paymentMethod', formValues.paymentMethod.toString());
+      }
+
+      if (formValues.referredBy && formValues.referredBy.trim()) {
+        formData.append('referredBy', formValues.referredBy.trim());
+      }
+
+      // Add boolean field
+      formData.append('handicap', formValues.handicap ? 'true' : 'false');
+
+      // Add enquiry fields if present
+      if (formValues.enquiryId) {
+        formData.append('enquiryId', formValues.enquiryId.toString());
+      }
+
+      if (formValues.enquiryMessage && formValues.enquiryMessage.trim()) {
+        formData.append('enquiryMessage', formValues.enquiryMessage.trim());
+      }
+
+      // Add files if selected
+      if (this.selectedProfileFile) {
+        formData.append('profilePhoto', this.selectedProfileFile);
+      }
+
+      if (this.selectedIdProofFile) {
+        formData.append('idProof', this.selectedIdProofFile);
+      }
 
       // Log FormData contents for debugging
+      console.log('FormData contents:');
       formData.forEach((value, key) => {
-        console.log(`FormData field - ${key}:`, value);
+        console.log(`${key}:`, value);
       });
 
       const response = await this.memberService.processMember(formData);
@@ -359,7 +429,21 @@ export class CreateMemberComponent implements OnInit {
 
         this.router.navigate(['/members']);
       } else {
-        throw new Error(response?.data?.message || 'Failed to create member');
+        const errorMessage = response?.data?.message || 'Failed to create member';
+        const errors = response?.data?.errors;
+
+        if (errors) {
+          console.error('Validation errors:', errors);
+          let errorDetails = '';
+          for (const [field, fieldErrors] of Object.entries(errors)) {
+            if (Array.isArray(fieldErrors)) {
+              errorDetails += `${field}: ${fieldErrors.join(', ')}\n`;
+            }
+          }
+          throw new Error(`${errorMessage}\n\nDetails:\n${errorDetails}`);
+        } else {
+          throw new Error(errorMessage);
+        }
       }
     } catch (error) {
       console.error('Submit error:', error);
@@ -369,7 +453,6 @@ export class CreateMemberComponent implements OnInit {
     }
   }
 
-  // Keep existing generateMemberId method unchanged
   private async generateMemberId(): Promise<string> {
     try {
       const currentDate = new Date();
@@ -395,7 +478,6 @@ export class CreateMemberComponent implements OnInit {
     }
   }
 
-  // Helper method to get all form validation errors
   private getFormValidationErrors(): Record<string, any> {
     const errors: Record<string, any> = {};
     Object.keys(this.memberForm.controls).forEach(key => {
@@ -407,7 +489,6 @@ export class CreateMemberComponent implements OnInit {
     return errors;
   }
 
-  // Helper method to get the first invalid field name
   private getFirstInvalidField(): string | null {
     const controls = this.memberForm.controls;
     for (const name in controls) {
@@ -420,13 +501,20 @@ export class CreateMemberComponent implements OnInit {
 
   onReset(): void {
     this.submitted = false;
-    this.selectedFile = null;
+    this.selectedProfileFile = null;
+    this.selectedIdProofFile = null;
     this.previewUrl = null;
     this.memberForm.reset();
     this.memberForm.patchValue({
       membershipStartDate: new Date().toISOString().split('T')[0],
       handicap: false
     });
+
+    // Reset file inputs
+    const profileInput = document.getElementById('profilePhoto') as HTMLInputElement;
+    const idProofInput = document.getElementById('idProof') as HTMLInputElement;
+    if (profileInput) profileInput.value = '';
+    if (idProofInput) idProofInput.value = '';
 
     // If from enquiry, reload the enquiry data
     if (this.isFromEnquiry && this.enquiryId) {
@@ -446,7 +534,7 @@ export class CreateMemberComponent implements OnInit {
     if (control.errors['required']) return 'This field is required';
     if (control.errors['email']) return 'Please enter a valid email address';
     if (control.errors['pattern']) {
-      if (fieldName.includes('Phone')) return 'Please enter a valid 10-digit phone number';
+      if (fieldName === 'phoneNumber') return 'Please enter a valid 10-digit phone number';
     }
     if (control.errors['minlength']) return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
 
@@ -457,7 +545,6 @@ export class CreateMemberComponent implements OnInit {
     await Swal.fire('Error', message, 'error');
   }
 
-  // Method to cancel and go back (useful when converting from enquiry)
   onCancel(): void {
     if (this.isFromEnquiry) {
       this.router.navigate(['/member-enquiry']);
