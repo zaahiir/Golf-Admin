@@ -1,3 +1,5 @@
+// Updated member-enquiry.component.ts with getPlanName method
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
@@ -20,17 +22,22 @@ import {
 import { MemberEnquiryService } from '../../common-service/memberEnquiry/member-enquiry.service';
 import Swal from 'sweetalert2';
 
+// Updated MemberEnquiryInterface
 interface MemberEnquiryInterface {
   id: number;
   memberEnquiryDate: string;
-  memberEnquiryPlan: string;
+  memberEnquiryPlan: any;
   memberEnquiryFirstName: string;
   memberEnquiryLastName: string;
   memberEnquiryPhoneNumber: string;
   memberEnquiryEmail: string;
   memberEnquiryMessage: string;
+  isConverted?: boolean; // Add this field to track conversion status
+  convertedMemberId?: string; // Add this field to store the member ID after conversion
+  convertedDate?: string; // Add this field to store conversion date
 }
 
+// Updated MemberEnquiryComponent
 @Component({
   selector: 'app-member-enquiry',
   standalone: true,
@@ -59,6 +66,7 @@ export class MemberEnquiryComponent implements OnInit {
   icons = { cilPen, cilTrash };
   tooltipEditText = 'Convert to Member';
   tooltipDeleteText = 'Delete';
+  tooltipConvertedText = 'Already Converted to Member';
 
   memberEnquiryList: MemberEnquiryInterface[] = [];
   filteredList: MemberEnquiryInterface[] = [];
@@ -75,6 +83,20 @@ export class MemberEnquiryComponent implements OnInit {
 
   ngOnInit() {
     this.loadMemberEnquiryList();
+  }
+
+  getPlanName(plan: any): string {
+    if (!plan) return 'N/A';
+
+    if (typeof plan === 'object' && plan.planName) {
+      return plan.planName;
+    }
+
+    if (typeof plan === 'string' || typeof plan === 'number') {
+      return plan.toString();
+    }
+
+    return 'N/A';
   }
 
   async loadMemberEnquiryList() {
@@ -97,12 +119,31 @@ export class MemberEnquiryComponent implements OnInit {
     }
   }
 
-  // New method to handle conversion to member
   convertToMember(enquiryId: number) {
+    // Check if already converted
+    const enquiry = this.memberEnquiryList.find(e => e.id === enquiryId);
+    if (enquiry?.isConverted) {
+      Swal.fire('Info', 'This enquiry has already been converted to a member.', 'info');
+      return;
+    }
+
     // Navigate to create member page with enquiry ID as query parameter
     this.router.navigate(['/members/add'], {
       queryParams: { enquiryId: enquiryId }
     });
+  }
+
+  // Method to check if an enquiry is converted
+  isEnquiryConverted(enquiry: MemberEnquiryInterface): boolean {
+    return enquiry.isConverted === true;
+  }
+
+  // Method to get the status display text
+  getStatusText(enquiry: MemberEnquiryInterface): string {
+    if (enquiry.isConverted) {
+      return `Converted (${enquiry.convertedMemberId || 'Member ID'})`;
+    }
+    return 'Pending';
   }
 
   filterList() {
@@ -114,11 +155,15 @@ export class MemberEnquiryComponent implements OnInit {
     const searchTermLower = this.searchTerm.toLowerCase().trim();
     this.filteredList = this.memberEnquiryList.filter(enquiry => {
       const fullName = `${enquiry.memberEnquiryFirstName || ''} ${enquiry.memberEnquiryLastName || ''}`.toLowerCase();
+      const planName = this.getPlanName(enquiry.memberEnquiryPlan).toLowerCase();
+      const status = this.getStatusText(enquiry).toLowerCase();
+
       const searchableFields = [
-        (enquiry.memberEnquiryPlan || '').toLowerCase(),
+        planName,
         fullName,
         (enquiry.memberEnquiryPhoneNumber || '').toLowerCase(),
-        (enquiry.memberEnquiryEmail || '').toLowerCase()
+        (enquiry.memberEnquiryEmail || '').toLowerCase(),
+        status
       ];
 
       return searchableFields.some(field => field.includes(searchTermLower));
@@ -169,36 +214,5 @@ export class MemberEnquiryComponent implements OnInit {
     this.filterList();
     this.currentPage = 1;
     this.updatePageRange();
-  }
-
-  async deleteMemberEnquiry(id: number) {
-    if (this.isLoading) return;
-
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!'
-    });
-
-    if (result.isConfirmed) {
-      this.isLoading = true;
-      try {
-        const response = await this.memberEnquiryService.deleteMemberEnquiry(id.toString());
-        if (response.data.code === 1) {
-          await Swal.fire('Deleted!', 'Member enquiry has been deleted.', 'success');
-          await this.loadMemberEnquiryList();
-        } else {
-          await Swal.fire('Error', 'Failed to delete member enquiry', 'error');
-        }
-      } catch (error) {
-        await Swal.fire('Error', 'An error occurred while deleting the member enquiry', 'error');
-      } finally {
-        this.isLoading = false;
-      }
-    }
   }
 }

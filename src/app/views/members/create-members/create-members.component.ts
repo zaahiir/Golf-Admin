@@ -168,35 +168,63 @@ export class CreateMemberComponent implements OnInit {
   }
 
   private async loadEnquiryData(): Promise<void> {
-    try {
-      console.log('Loading enquiry data for ID:', this.enquiryId);
-      const response = await this.memberEnquiryService.listMemberEnquiry(this.enquiryId!);
+  try {
+    console.log('Loading enquiry data for ID:', this.enquiryId);
+    const response = await this.memberEnquiryService.listMemberEnquiry(this.enquiryId!);
 
-      if (response?.data?.code === 1 && response.data.data && response.data.data.length > 0) {
-        const enquiryData: MemberEnquiry = response.data.data[0];
-        console.log('Enquiry data loaded:', enquiryData);
+    if (response?.data?.code === 1 && response.data.data && response.data.data.length > 0) {
+      const enquiryData: MemberEnquiry = response.data.data[0];
+      console.log('Enquiry data loaded:', enquiryData);
 
-        // Pre-fill form with enquiry data
-        this.memberForm.patchValue({
-          firstName: enquiryData.memberEnquiryFirstName || '',
-          lastName: enquiryData.memberEnquiryLastName || '',
-          email: enquiryData.memberEnquiryEmail || '',
-          phoneNumber: enquiryData.memberEnquiryPhoneNumber || '',
-          plan: enquiryData.memberEnquiryPlan || '',
-          enquiryId: this.enquiryId,
-          enquiryMessage: enquiryData.memberEnquiryMessage || ''
-        });
-
-        console.log('Form patched with enquiry data');
-      } else {
-        console.error('Failed to load enquiry data or no data found');
-        await this.showError('Failed to load enquiry data');
+      // Handle plan data - find matching plan ID from plans array
+      let planId = '';
+      if (enquiryData.memberEnquiryPlan) {
+        // If memberEnquiryPlan is an object with id property
+        if (typeof enquiryData.memberEnquiryPlan === 'object' && enquiryData.memberEnquiryPlan.id) {
+          planId = enquiryData.memberEnquiryPlan.id.toString();
+        }
+        // If memberEnquiryPlan is just an ID (number or string)
+        else if (typeof enquiryData.memberEnquiryPlan === 'number') {
+          planId = enquiryData.memberEnquiryPlan.toString();
+        }
+        // If memberEnquiryPlan is a plan name (string), find the matching plan ID
+        else if (typeof enquiryData.memberEnquiryPlan === 'string') {
+          const matchingPlan = this.plans.find(plan =>
+            plan.planName.toLowerCase() === enquiryData.memberEnquiryPlan.toLowerCase()
+          );
+          if (matchingPlan) {
+            planId = matchingPlan.id.toString();
+          }
+        }
       }
-    } catch (error) {
-      console.error('Error loading enquiry data:', error);
+
+      // Pre-fill form with enquiry data
+      this.memberForm.patchValue({
+        firstName: enquiryData.memberEnquiryFirstName || '',
+        lastName: enquiryData.memberEnquiryLastName || '',
+        email: enquiryData.memberEnquiryEmail || '',
+        phoneNumber: enquiryData.memberEnquiryPhoneNumber || '',
+        plan: planId, // Use the extracted/found plan ID
+        enquiryId: this.enquiryId,
+        enquiryMessage: enquiryData.memberEnquiryMessage || ''
+      });
+
+      console.log('Form patched with enquiry data, plan ID:', planId);
+
+      // Log the matching plan for debugging
+      if (planId) {
+        const selectedPlan = this.plans.find(p => p.id.toString() === planId);
+        console.log('Selected plan:', selectedPlan);
+      }
+    } else {
+      console.error('Failed to load enquiry data or no data found');
       await this.showError('Failed to load enquiry data');
     }
+  } catch (error) {
+    console.error('Error loading enquiry data:', error);
+    await this.showError('Failed to load enquiry data');
   }
+}
 
   get f() { return this.memberForm.controls; }
 
@@ -416,8 +444,26 @@ export class CreateMemberComponent implements OnInit {
       if (response?.data?.code === 1) {
         let successMessage = `Member has been created successfully with Golf Club ID: ${generatedMemberId}. Login credentials have been sent to their email.`;
 
-        if (this.isFromEnquiry) {
-          successMessage = `Enquiry has been successfully converted to member with Golf Club ID: ${generatedMemberId}. Login credentials have been sent to their email.`;
+        // FIXED: Mark enquiry as converted BEFORE showing success message and navigating
+        if (this.isFromEnquiry && this.enquiryId) {
+          try {
+            console.log('Attempting to mark enquiry as converted...');
+            await this.markEnquiryAsConverted(this.enquiryId, generatedMemberId);
+            console.log('Enquiry marked as converted successfully');
+            successMessage = `Enquiry has been successfully converted to member with Golf Club ID: ${generatedMemberId}. Login credentials have been sent to their email.`;
+          } catch (error) {
+            console.error('Failed to mark enquiry as converted:', error);
+            // Show a warning but don't fail the whole process
+            await Swal.fire({
+              title: 'Warning',
+              text: `Member created successfully with ID: ${generatedMemberId}, but failed to update enquiry status. Please manually update the enquiry status.`,
+              icon: 'warning',
+              confirmButtonText: 'Ok'
+            });
+            // Still navigate to the appropriate page
+            this.router.navigate([this.isFromEnquiry ? '/memberEnquiry' : '/members']);
+            return;
+          }
         }
 
         await Swal.fire({
@@ -427,7 +473,12 @@ export class CreateMemberComponent implements OnInit {
           confirmButtonText: 'Ok'
         });
 
-        this.router.navigate(['/members']);
+        // Navigate back to appropriate page
+        if (this.isFromEnquiry) {
+          this.router.navigate(['/memberEnquiry']);
+        } else {
+          this.router.navigate(['/members']);
+        }
       } else {
         const errorMessage = response?.data?.message || 'Failed to create member';
         const errors = response?.data?.errors;
@@ -450,6 +501,31 @@ export class CreateMemberComponent implements OnInit {
       await this.showError(error instanceof Error ? error.message : 'Failed to create member');
     } finally {
       this.loading = false;
+    }
+  }
+
+  // FIXED: Improved markEnquiryAsConverted method with better error handling
+  private async markEnquiryAsConverted(enquiryId: string, memberId: string): Promise<void> {
+    try {
+      console.log('Marking enquiry as converted:', { enquiryId, memberId });
+
+      const response = await this.memberEnquiryService.markEnquiryConverted(enquiryId, {
+        convertedMemberId: memberId
+      });
+
+      console.log('Mark converted response:', response);
+
+      if (response?.data?.code === 1) {
+        console.log('Enquiry marked as converted successfully');
+      } else {
+        const errorMessage = response?.data?.message || 'Failed to mark enquiry as converted';
+        console.error('Failed to mark enquiry as converted:', errorMessage);
+        throw new Error(errorMessage);
+      }
+    } catch (error) {
+      console.error('Error marking enquiry as converted:', error);
+      // Re-throw the error to be handled by the calling function
+      throw error;
     }
   }
 
@@ -547,7 +623,7 @@ export class CreateMemberComponent implements OnInit {
 
   onCancel(): void {
     if (this.isFromEnquiry) {
-      this.router.navigate(['/member-enquiry']);
+      this.router.navigate(['/memberEnquiry']);
     } else {
       this.router.navigate(['/members']);
     }

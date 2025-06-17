@@ -11,7 +11,7 @@
           <!-- Show enquiry message if converting from enquiry -->
           <c-col xs="12" *ngIf="isFromEnquiry && memberForm.get('enquiryMessage')?.value">
             <div class="alert alert-info">
-              <strong>Original Enquiry Message:</strong><br>
+              <strong>Enquiry Message:</strong><br>
               {{ memberForm.get('enquiryMessage')?.value }}
             </div>
           </c-col>

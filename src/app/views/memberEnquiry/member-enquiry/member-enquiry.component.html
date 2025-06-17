@@ -1,3 +1,4 @@
+<!-- Updated member-enquiry.component.html -->
 <c-row ngPreserveWhitespaces>
   <c-col xs="12">
     <c-card class="mb-4">
@@ -27,42 +28,51 @@
               <th scope="col">Name</th>
               <th scope="col">Phone Number</th>
               <th scope="col">Email</th>
+              <th scope="col">Status</th>
               <th scope="col" style="width: 120px">Action</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let enquiry of paginatedMemberEnquiryList; let i = index">
+            <tr *ngFor="let enquiry of paginatedMemberEnquiryList; let i = index"
+                [ngClass]="{'table-secondary': isEnquiryConverted(enquiry)}">
               <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
               <td>{{ enquiry.memberEnquiryDate | date:'mediumDate' }}</td>
-              <td>{{ enquiry.memberEnquiryPlan }}</td>
+              <td>{{ getPlanName(enquiry.memberEnquiryPlan) }}</td>
               <td>{{ enquiry.memberEnquiryFirstName }} {{ enquiry.memberEnquiryLastName }}</td>
               <td>{{ enquiry.memberEnquiryPhoneNumber }}</td>
               <td>{{ enquiry.memberEnquiryEmail }}</td>
               <td>
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'bg-success': isEnquiryConverted(enquiry),
+                    'bg-warning': !isEnquiryConverted(enquiry)
+                  }">
+                  {{ getStatusText(enquiry) }}
+                </span>
+              </td>
+              <td>
+                <!-- Convert Button -->
                 <a
                   cButton
                   (click)="convertToMember(enquiry.id)"
                   color="btn-transparent"
-                  class="btn-sm text-primary border-0 py-0"
-                  [cTooltip]="tooltipEditText"
+                  class="btn-sm border-0 py-0"
+                  [ngClass]="{
+                    'text-primary': !isEnquiryConverted(enquiry),
+                    'text-muted': isEnquiryConverted(enquiry)
+                  }"
+                  [disabled]="isEnquiryConverted(enquiry)"
+                  [cTooltip]="isEnquiryConverted(enquiry) ? tooltipConvertedText : tooltipEditText"
                   cTooltipPlacement="top"
+                  [style.cursor]="isEnquiryConverted(enquiry) ? 'not-allowed' : 'pointer'"
                 >
                   <svg [cIcon]="icons.cilPen" size="xl"></svg>
-                </a>
-                <a
-                  cButton
-                  (click)="deleteMemberEnquiry(enquiry.id)"
-                  color="btn-transparent"
-                  class="btn-sm text-danger border-0 py-0"
-                  [cTooltip]="tooltipDeleteText"
-                  cTooltipPlacement="top"
-                >
-                  <svg [cIcon]="icons.cilTrash" width="25"></svg>
                 </a>
               </td>
             </tr>
             <tr *ngIf="paginatedMemberEnquiryList.length === 0">
-              <td colspan="7" class="text-center py-4">
+              <td colspan="8" class="text-center py-4">
                 {{ isLoading ? 'Loading...' : 'No enquiries found' }}
               </td>
             </tr>
