@@ -1,6 +1,6 @@
 import { Injectable, PLATFORM_ID, Inject, Injector } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject } from 'rxjs';
+import { Observable, throwError, BehaviorSubject, interval, Subscription } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
@@ -18,16 +18,20 @@ export interface LoginResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  // Use the production URL
-  // private apiUrl = 'http://localhost/apis/';
   private apiUrl = 'https://mastergolfclub.com/apis/';
   private isBrowser: boolean;
 
-  // Add authentication state subject to track login status
+  // Authentication state
   private authenticationState = new BehaviorSubject<boolean>(false);
   public isAuthenticated$ = this.authenticationState.asObservable();
 
-  // In the constructor:
+  // Auto-logout timer variables
+  private autoLogoutTimer: any = null;
+  private sessionCheckTimer: Subscription | null = null;
+  private readonly SESSION_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+  // private readonly SESSION_DURATION = 3 * 60 * 1000; 
+  private readonly CHECK_INTERVAL = 60 * 1000; // Check every minute
+
   constructor(
     private http: HttpClient,
     private router: Router,
@@ -36,8 +40,13 @@ export class AuthService {
     const platformId = this.injector.get(PLATFORM_ID);
     this.isBrowser = isPlatformBrowser(platformId);
 
-    // Initialize authentication state on service creation
+    // Initialize authentication state
     this.initializeAuthState();
+
+    // Start session monitoring if user is already logged in
+    if (this.isAuthenticated()) {
+      this.startSessionMonitoring();
+    }
   }
 
   private initializeAuthState(): void {
@@ -52,7 +61,7 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}login/`, { username, password })
       .pipe(
         tap((response: LoginResponse) => {
-          // Store tokens and user information in local storage
+          // Store tokens and user information
           this.setStorageItem('access_token', response.access);
           this.setStorageItem('refresh_token', response.refresh);
           this.setStorageItem('user_type', response.user_type);
@@ -60,24 +69,124 @@ export class AuthService {
           this.setStorageItem('username', response.username);
           this.setStorageItem('email', response.email);
 
+          // Store login timestamp for session tracking
+          this.setStorageItem('login_timestamp', Date.now().toString());
+
           // Update authentication state
           this.authenticationState.next(true);
+
+          // Start auto-logout timer and session monitoring
+          this.startAutoLogoutTimer();
+          this.startSessionMonitoring();
         }),
         catchError((error) => this.handleError(error))
       );
   }
 
-  // Admin logout - UPDATED VERSION
+  // Start auto-logout timer (1 hour)
+  private startAutoLogoutTimer(): void {
+    this.clearAutoLogoutTimer();
+
+    if (this.isBrowser) {
+      this.autoLogoutTimer = setTimeout(() => {
+        console.log('Session expired - auto logout');
+        this.performAutoLogout();
+      }, this.SESSION_DURATION);
+    }
+  }
+
+  // Start session monitoring to check for expired sessions
+  private startSessionMonitoring(): void {
+    this.stopSessionMonitoring();
+
+    if (this.isBrowser) {
+      this.sessionCheckTimer = interval(this.CHECK_INTERVAL).subscribe(() => {
+        this.checkSessionExpiry();
+      });
+    }
+  }
+
+  // Check if current session has expired
+  private checkSessionExpiry(): void {
+    const loginTimestamp = this.getStorageItem('login_timestamp');
+
+    if (!loginTimestamp) {
+      this.performAutoLogout();
+      return;
+    }
+
+    const loginTime = parseInt(loginTimestamp, 10);
+    const currentTime = Date.now();
+    const sessionAge = currentTime - loginTime;
+
+    if (sessionAge >= this.SESSION_DURATION) {
+      console.log('Session expired during periodic check');
+      this.performAutoLogout();
+    }
+  }
+
+  // Perform automatic logout due to session expiry
+  private performAutoLogout(): void {
+    console.log('Performing auto-logout due to session expiry');
+
+    // Show user notification about session expiry
+    if (this.isBrowser) {
+      alert('Your session has expired. You will be redirected to the login page.');
+    }
+
+    // Perform complete logout
+    this.performCompleteLogout();
+  }
+
+  // Clear auto-logout timer
+  private clearAutoLogoutTimer(): void {
+    if (this.autoLogoutTimer) {
+      clearTimeout(this.autoLogoutTimer);
+      this.autoLogoutTimer = null;
+    }
+  }
+
+  // Stop session monitoring
+  private stopSessionMonitoring(): void {
+    if (this.sessionCheckTimer) {
+      this.sessionCheckTimer.unsubscribe();
+      this.sessionCheckTimer = null;
+    }
+  }
+
+  // Get remaining session time in minutes
+  getRemainingSessionTime(): number {
+    const loginTimestamp = this.getStorageItem('login_timestamp');
+
+    if (!loginTimestamp) {
+      return 0;
+    }
+
+    const loginTime = parseInt(loginTimestamp, 10);
+    const currentTime = Date.now();
+    const sessionAge = currentTime - loginTime;
+    const remainingTime = this.SESSION_DURATION - sessionAge;
+
+    return Math.max(0, Math.floor(remainingTime / (60 * 1000))); // Return in minutes
+  }
+
+  // Reset session timer (call this on user activity)
+  resetSessionTimer(): void {
+    if (this.isAuthenticated() && this.getUserType() === 'superuser') {
+      this.setStorageItem('login_timestamp', Date.now().toString());
+      this.startAutoLogoutTimer();
+    }
+  }
+
+  // Admin logout
   logout(): Observable<any> {
     const refreshToken = this.getStorageItem('refresh_token');
 
     if (!refreshToken) {
-      // No refresh token, just clear local data
       this.performCompleteLogout();
       return throwError(() => new Error('No refresh token available'));
     }
 
-    // Create request with minimal headers to avoid CORS issues
     const logoutRequest = this.http.post(`${this.apiUrl}logout/`,
       { refresh_token: refreshToken },
       {
@@ -89,45 +198,40 @@ export class AuthService {
 
     return logoutRequest.pipe(
       tap(() => {
-        // Clear all localStorage items after successful logout
         this.performCompleteLogout();
       }),
       catchError((error: HttpErrorResponse) => {
         console.error('Logout API error:', error);
-        // Even if the server request fails, clear user data
         this.performCompleteLogout();
-
-        // Don't throw the error, consider logout successful
-        // since we've cleared the local data
         return throwError(() => error);
       })
     );
   }
 
-  // Complete logout process for admin - ENHANCED VERSION
+  // Complete logout process for admin
   performLogout(): void {
     const refreshToken = this.getStorageItem('refresh_token');
 
     if (refreshToken) {
-      // Call backend logout endpoint
       this.logout().subscribe({
         next: (response) => {
           console.log('Admin logout successful');
         },
         error: (error) => {
           console.error('Admin logout error:', error);
-          // Even if backend logout fails, we've already cleared local tokens
-          // in the logout() method's error handler
         }
       });
     } else {
-      // No refresh token, just clear and redirect
       this.performCompleteLogout();
     }
   }
 
-  // NEW METHOD: Complete logout process
+  // Complete logout process
   private performCompleteLogout(): void {
+    // Stop all timers and monitoring
+    this.clearAutoLogoutTimer();
+    this.stopSessionMonitoring();
+
     // Clear all user data
     this.clearAllUserData();
 
@@ -136,10 +240,8 @@ export class AuthService {
 
     // Clear browser history to prevent back button access
     if (this.isBrowser) {
-      // Replace current history entry with login page
       window.history.replaceState(null, '', '/login');
 
-      // Clear any cached data
       if ('caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => {
@@ -149,7 +251,7 @@ export class AuthService {
       }
     }
 
-    // Navigate to login and replace current route
+    // Navigate to login
     this.router.navigate(['/login'], { replaceUrl: true });
   }
 
@@ -161,9 +263,9 @@ export class AuthService {
     this.removeStorageItem('user_id');
     this.removeStorageItem('username');
     this.removeStorageItem('email');
+    this.removeStorageItem('login_timestamp'); // Clear login timestamp
     this.removeSessionItem('session_type');
 
-    // Clear any other session data
     if (this.isBrowser) {
       sessionStorage.clear();
     }
@@ -175,10 +277,13 @@ export class AuthService {
       .pipe(
         tap((response: any) => {
           this.setStorageItem('access_token', response.access);
+          // Update login timestamp on token refresh
+          this.setStorageItem('login_timestamp', Date.now().toString());
           this.authenticationState.next(true);
+          // Restart the auto-logout timer
+          this.startAutoLogoutTimer();
         }),
         catchError((error) => {
-          // If refresh fails, logout user
           this.performCompleteLogout();
           return this.handleError(error);
         })
@@ -188,22 +293,41 @@ export class AuthService {
   isAuthenticated(): boolean {
     const token = this.getStorageItem('access_token');
     const userType = this.getUserType();
-    const isAuth = !!token && userType === 'superuser';
+    const loginTimestamp = this.getStorageItem('login_timestamp');
+
+    // Check if token exists and user is superuser
+    const hasValidToken = !!token && userType === 'superuser';
+
+    // Check if session hasn't expired
+    let sessionValid = true;
+    if (loginTimestamp) {
+      const loginTime = parseInt(loginTimestamp, 10);
+      const currentTime = Date.now();
+      const sessionAge = currentTime - loginTime;
+      sessionValid = sessionAge < this.SESSION_DURATION;
+    } else {
+      sessionValid = false;
+    }
+
+    const isAuth = hasValidToken && sessionValid;
 
     // Update subject if state changed
     if (this.authenticationState.value !== isAuth) {
       this.authenticationState.next(isAuth);
+
+      // If session expired, perform auto logout
+      if (!isAuth && hasValidToken && !sessionValid) {
+        this.performAutoLogout();
+      }
     }
 
     return isAuth;
   }
 
-  // Check if user is admin/superuser
   isAdmin(): boolean {
     return this.getUserType() === 'superuser';
   }
 
-  // Add this method to fix the errors
   isLoggedIn(): boolean {
     return this.isAuthenticated();
   }
@@ -233,12 +357,11 @@ export class AuthService {
     return this.getStorageItem('refresh_token');
   }
 
-  // NEW METHOD: Force logout (for use in guards and interceptors)
   forceLogout(): void {
     this.performCompleteLogout();
   }
 
-  // Helper methods to safely access storage
+  // Helper methods for storage
   private getStorageItem(key: string): string | null {
     if (this.isBrowser) {
       return localStorage.getItem(key);
@@ -268,10 +391,8 @@ export class AuthService {
     let errorMessage = 'An unknown error occurred';
 
     if (error.error instanceof ErrorEvent) {
-      // Client-side error
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Server-side error
       if (error.error?.detail) {
         errorMessage = error.error.detail;
       } else {
