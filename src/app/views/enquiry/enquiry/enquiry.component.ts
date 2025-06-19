@@ -14,7 +14,8 @@ import {
   PaginationComponent,
   PageItemComponent,
   PageLinkDirective,
-  SpinnerComponent
+  SpinnerComponent,
+  BadgeComponent
 } from '@coreui/angular';
 import { EnquiryService } from '../../common-service/enquiry/enquiry.service';
 import Swal from 'sweetalert2';
@@ -24,6 +25,7 @@ import {
   cilTrash
 } from '@coreui/icons';
 
+// Interface for enquiry data
 interface EnquiryInterface {
   id: number;
   contactEnquiryFirstName: string;
@@ -32,6 +34,7 @@ interface EnquiryInterface {
   contactEnquiryEmail: string;
   contactEnquiryMessage: string;
   contactEnquiryDate: string;
+  status: string;
 }
 
 @Component({
@@ -53,6 +56,7 @@ interface EnquiryInterface {
     PaginationComponent,
     PageItemComponent,
     PageLinkDirective,
+    BadgeComponent
   ],
   templateUrl: './enquiry.component.html',
   styleUrl: './enquiry.component.scss'
@@ -63,7 +67,6 @@ export class EnquiryComponent implements OnInit {
     cilCheckCircle,
     cilTrash
   };
-  tooltipDeleteText = 'Delete';
 
   enquiryList: EnquiryInterface[] = [];
   pageRange: number[] = [];
@@ -163,35 +166,46 @@ export class EnquiryComponent implements OnInit {
     return Math.ceil(filteredLength / this.itemsPerPage);
   }
 
-  async deleteEnquiry(id: number) {
-    if (this.isLoading) return;
-
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!'
-    });
-
-    if (result.isConfirmed) {
-      this.isLoading = true;
-      try {
-        const response = await this.enquiryService.deleteEnquiry(id.toString());
-        if (response.data.code === 1) {
-          await Swal.fire('Deleted!', 'Enquiry has been deleted.', 'success');
-          await this.loadEnquiryList();
-        } else {
-          await Swal.fire('Error', 'Failed to delete enquiry', 'error');
-        }
-      } catch (error) {
-        console.error('Error deleting enquiry:', error);
-        await Swal.fire('Error', 'An error occurred while deleting the enquiry', 'error');
-      } finally {
-        this.isLoading = false;
+  // Updated method to toggle status
+  async toggleStatus(enquiryId: number) {
+    try {
+      const response = await this.enquiryService.toggleEnquiryStatus(enquiryId.toString());
+      if (response.data.code === 1) {
+        // Success - refresh the enquiry list
+        await this.loadEnquiryList();
+        await Swal.fire('Success', response.data.message, 'success');
+      } else {
+        console.error('Failed to toggle status:', response.data.message);
+        await Swal.fire('Error', 'Failed to update status', 'error');
       }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      await Swal.fire('Error', 'Error updating status', 'error');
     }
+  }
+
+  // Helper method to get the next status for display
+  getNextStatus(currentStatus: string): string {
+    return currentStatus === 'pending' ? 'completed' : 'pending';
+  }
+
+  // Helper method to get the appropriate icon
+  getStatusIcon(currentStatus: string): any {
+    return currentStatus === 'pending' ? this.icons.cilCheckCircle : this.icons.cilClock;
+  }
+
+  // Helper method to get button color
+  getButtonColor(currentStatus: string): string {
+    return currentStatus === 'pending' ? 'success' : 'warning';
+  }
+
+  // Optional: Method to filter enquiries by status
+  filterByStatus(status: string) {
+    if (status === 'all') {
+      this.currentPage = 1;
+    } else {
+      this.currentPage = 1;
+    }
+    this.updatePageRange();
   }
 }

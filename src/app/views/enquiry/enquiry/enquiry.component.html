@@ -1,3 +1,4 @@
+<!-- Option 1: Modern Pill Button Design -->
 <c-col xs="12">
   <c-card class="mb-4">
     <c-card-body>
@@ -34,51 +35,33 @@
             <td>{{ enquiry.contactEnquiryMessage }}</td>
             <td>{{ enquiry.contactEnquiryDate | date:'mediumDate' }}</td>
             <td>
-              <c-badge
-                [color]="enquiry.status === 'completed' ? 'success' : 'warning'"
-                class="text-capitalize">
-                {{ enquiry.status }}
-              </c-badge>
+              <span
+                class="status-badge"
+                [ngClass]="enquiry.status === 'completed' ? 'status-completed' : 'status-pending'">
+                {{ enquiry.status | titlecase }}
+              </span>
             </td>
             <td>
-              <!-- Status Toggle Buttons -->
-              <c-button-group size="sm" class="me-2">
-                <button
-                  cButton
-                  [color]="enquiry.status === 'pending' ? 'warning' : 'outline-warning'"
-                  [disabled]="enquiry.status === 'pending'"
-                  (click)="updateStatus(enquiry.id, 'pending')"
-                  size="sm"
-                  [cTooltip]="'Mark as Pending'"
+              <div class="toggle-switch-container">
+                <input
+                  type="checkbox"
+                  class="toggle-switch-input"
+                  [id]="'toggle-' + enquiry.id"
+                  [checked]="enquiry.status === 'completed'"
+                  (change)="toggleStatus(enquiry.id)"
+                >
+                <label
+                  [for]="'toggle-' + enquiry.id"
+                  class="toggle-switch-label"
+                  [cTooltip]="'Toggle status: ' + enquiry.status"
                   cTooltipPlacement="top"
                 >
-                  <svg [cIcon]="icons.cilClock" width="16"></svg>
-                </button>
-                <button
-                  cButton
-                  [color]="enquiry.status === 'completed' ? 'success' : 'outline-success'"
-                  [disabled]="enquiry.status === 'completed'"
-                  (click)="updateStatus(enquiry.id, 'completed')"
-                  size="sm"
-                  [cTooltip]="'Mark as Completed'"
-                  cTooltipPlacement="top"
-                >
-                  <svg [cIcon]="icons.cilCheckCircle" width="16"></svg>
-                </button>
-              </c-button-group>
-
-              <!-- Delete Button -->
-              <button
-                cButton
-                (click)="deleteEnquiry(enquiry.id)"
-                color="danger"
-                variant="outline"
-                size="sm"
-                [cTooltip]="'Delete Enquiry'"
-                cTooltipPlacement="top"
-              >
-                <svg [cIcon]="icons.cilTrash" width="16"></svg>
-              </button>
+                  <span class="toggle-switch-slider"></span>
+                  <span class="toggle-switch-text">
+                    {{ enquiry.status === 'pending' ? 'Complete' : 'Reopen' }}
+                  </span>
+                </label>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -119,3 +102,6 @@
     </c-card-body>
   </c-card>
 </c-col>
+
+<!-- Alternative Option 2: Toggle Switch Design -->
+

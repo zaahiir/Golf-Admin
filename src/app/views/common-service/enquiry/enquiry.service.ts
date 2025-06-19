@@ -10,14 +10,14 @@ export class EnquiryService {
   private lists: string;
   private processing: string;
   private deletion: string;
-  private updateStatus: string;  // New endpoint
+  private toggleStatus: string;  // Updated endpoint name
 
   constructor() {
     this.apiUrl = new BaseAPIUrl().getUrl(baseURLType);
     this.lists = this.apiUrl + "contactEnquiry/0/listing/";
     this.processing = this.apiUrl + "contactEnquiry/0/processing/";
     this.deletion = this.apiUrl + "contactEnquiry/0/deletion/";
-    this.updateStatus = this.apiUrl + "contactEnquiry/0/update_status/";  // New endpoint
+    this.toggleStatus = this.apiUrl + "contactEnquiry/0/toggle_status/";  // Updated endpoint
   }
 
   listEnquiry(id: string = '0') {
@@ -32,8 +32,8 @@ export class EnquiryService {
     return axios.get(this.deletion.replace('0', id));
   }
 
-  // New method to update status
-  updateEnquiryStatus(id: string, status: string) {
-    return axios.post(this.updateStatus.replace('0', id), { status: status });
+  // Updated method to toggle status
+  toggleEnquiryStatus(id: string) {
+    return axios.post(this.toggleStatus.replace('0', id), {});
   }
 }
