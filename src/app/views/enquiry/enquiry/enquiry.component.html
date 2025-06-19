@@ -42,17 +42,25 @@
               </span>
             </td>
             <td>
-  <button
-    class="pill-action-btn"
-    [ngClass]="enquiry.status === 'pending' ? 'btn-pending' : 'btn-reopen'"
-    (click)="toggleStatus(enquiry.id)"
-    [cTooltip]="'Click to ' + (enquiry.status === 'pending' ? 'mark as complete' : 'reopen enquiry')"
-    cTooltipPlacement="top"
-  >
-    <i class="fas" [ngClass]="enquiry.status === 'pending' ? 'fa-clock' : 'fa-redo'"></i>
-    {{ enquiry.status === 'pending' ? 'Pending' : 'Reopen' }}
-  </button>
-</td>
+              <div class="toggle-switch-container">
+                <input
+                  type="checkbox"
+                  class="toggle-switch-input"
+                  [id]="'toggle-' + enquiry.id"
+                  [checked]="enquiry.status === 'completed'"
+                  (change)="toggleStatus(enquiry.id)"
+                >
+                <label
+                  [for]="'toggle-' + enquiry.id"
+                  class="toggle-switch-label"
+                  [cTooltip]="'Toggle status: ' + (enquiry.status === 'complete' ? 'Mark as Complete' : 'Reopen Enquiry')"
+                  cTooltipPlacement="top"
+                >
+                  <span class="toggle-switch-slider"></span>
+                  <span class="toggle-switch-text"></span>
+                </label>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
