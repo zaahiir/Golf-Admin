@@ -21,6 +21,7 @@
             <th scope="col">Email</th>
             <th scope="col">Message</th>
             <th scope="col">Date</th>
+            <th scope="col">Status</th>
             <th scope="col">Action</th>
           </tr>
         </thead>
@@ -33,17 +34,51 @@
             <td>{{ enquiry.contactEnquiryMessage }}</td>
             <td>{{ enquiry.contactEnquiryDate | date:'mediumDate' }}</td>
             <td>
-              <!-- <a
+              <c-badge
+                [color]="enquiry.status === 'completed' ? 'success' : 'warning'"
+                class="text-capitalize">
+                {{ enquiry.status }}
+              </c-badge>
+            </td>
+            <td>
+              <!-- Status Toggle Buttons -->
+              <c-button-group size="sm" class="me-2">
+                <button
+                  cButton
+                  [color]="enquiry.status === 'pending' ? 'warning' : 'outline-warning'"
+                  [disabled]="enquiry.status === 'pending'"
+                  (click)="updateStatus(enquiry.id, 'pending')"
+                  size="sm"
+                  [cTooltip]="'Mark as Pending'"
+                  cTooltipPlacement="top"
+                >
+                  <svg [cIcon]="icons.cilClock" width="16"></svg>
+                </button>
+                <button
+                  cButton
+                  [color]="enquiry.status === 'completed' ? 'success' : 'outline-success'"
+                  [disabled]="enquiry.status === 'completed'"
+                  (click)="updateStatus(enquiry.id, 'completed')"
+                  size="sm"
+                  [cTooltip]="'Mark as Completed'"
+                  cTooltipPlacement="top"
+                >
+                  <svg [cIcon]="icons.cilCheckCircle" width="16"></svg>
+                </button>
+              </c-button-group>
+
+              <!-- Delete Button -->
+              <button
                 cButton
                 (click)="deleteEnquiry(enquiry.id)"
-                color="btn-transparent"
-                role="button"
-                class="btn-sm text-danger border-0 py-0"
-                [cTooltip]="tooltipDeleteText"
+                color="danger"
+                variant="outline"
+                size="sm"
+                [cTooltip]="'Delete Enquiry'"
                 cTooltipPlacement="top"
               >
-                <svg [cIcon]="icons.cilTrash" width="25" title="Delete Icon"></svg>
-              </a> -->
+                <svg [cIcon]="icons.cilTrash" width="16"></svg>
+              </button>
             </td>
           </tr>
         </tbody>

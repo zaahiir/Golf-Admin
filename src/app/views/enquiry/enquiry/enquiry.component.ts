@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { NgClass, NgStyle, CommonModule, DatePipe } from '@angular/common';
-import { cilTrash } from '@coreui/icons';
 import { IconDirective } from '@coreui/icons-angular';
 import { FormsModule } from '@angular/forms';
 import {
@@ -19,6 +18,11 @@ import {
 } from '@coreui/angular';
 import { EnquiryService } from '../../common-service/enquiry/enquiry.service';
 import Swal from 'sweetalert2';
+import {
+  cilClock,
+  cilCheckCircle,
+  cilTrash
+} from '@coreui/icons';
 
 interface EnquiryInterface {
   id: number;
@@ -54,7 +58,11 @@ interface EnquiryInterface {
   styleUrl: './enquiry.component.scss'
 })
 export class EnquiryComponent implements OnInit {
-  icons = { cilTrash };
+  icons = {
+    cilClock,
+    cilCheckCircle,
+    cilTrash
+  };
   tooltipDeleteText = 'Delete';
 
   enquiryList: EnquiryInterface[] = [];
