@@ -1,61 +1,71 @@
-<div class="bg-light dark:bg-transparent min-vh-100 d-flex flex-row align-items-center">
-  <c-container breakpoint="md">
-    <c-row class="justify-content-center">
-      <c-col lg="6" xl="4">
-        <c-card-group>
-          <c-card class="p-4">
-            <c-card-body>
-              <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" cForm>
-                <h1>Login</h1>
-                <p class="text-body-secondary">Sign In to your account</p>
+<section class="login-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
 
-                <c-input-group class="mb-3">
-                  <span cInputGroupText>
-                    <svg cIcon name="cilUser"></svg>
-                  </span>
-                  <input
-                    formControlName="username"
-                    autoComplete="username"
-                    cFormControl
-                    placeholder="Username"
-                  />
-                </c-input-group>
+        <!-- Admin Login Card -->
+        <div class="card">
 
-                <c-input-group class="mb-4">
-                  <span cInputGroupText>
-                    <svg cIcon name="cilLockLocked"></svg>
-                  </span>
-                  <input
-                    formControlName="password"
-                    autoComplete="current-password"
-                    cFormControl
-                    placeholder="Password"
-                    type="password"
-                  />
-                </c-input-group>
+          <!-- Logo Container -->
+          <div class="logo-container">
+            <img src="assets/mgc_logo-03.png" alt="GolFer Logo" class="logo">
+          </div>
 
-                <div *ngIf="errorMessage" class="text-danger mb-3">
-                  {{ errorMessage }}
+          <!-- Admin Login Form -->
+          <div class="card-header">
+            <h2>Admin Login</h2>
+          </div>
+          <div class="card-body p-4">
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" cForm>
+              <div class="mb-3">
+                <label for="username" class="form-label">Username <span>*</span></label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="username"
+                  formControlName="username"
+                  placeholder="Enter your username"
+                  autoComplete="username"
+                  required>
+                <div *ngIf="loginForm.get('username')?.invalid && (loginForm.get('username')?.dirty || loginForm.get('username')?.touched)" class="text-danger">
+                  <small *ngIf="loginForm.get('username')?.errors?.['required']">Username is required</small>
                 </div>
+              </div>
 
-                <c-row>
-                  <c-col xs="6">
-                    <button
-                      cButton
-                      class="px-4"
-                      color="primary"
-                      type="submit"
-                      [disabled]="loginForm.invalid"
-                    >
-                      Login
-                    </button>
-                  </c-col>
-                </c-row>
-              </form>
-            </c-card-body>
-          </c-card>
-        </c-card-group>
-      </c-col>
-    </c-row>
-  </c-container>
-</div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Password <span>*</span></label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="password"
+                  formControlName="password"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  required>
+                <div *ngIf="loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)" class="text-danger">
+                  <small *ngIf="loginForm.get('password')?.errors?.['required']">Password is required</small>
+                </div>
+              </div>
+
+              <!-- Error message display -->
+              <div *ngIf="errorMessage" class="alert alert-danger mb-3">
+                {{ errorMessage }}
+              </div>
+
+              <div class="d-grid gap-2 mt-4">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="isLoading">
+                  <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Sign In
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

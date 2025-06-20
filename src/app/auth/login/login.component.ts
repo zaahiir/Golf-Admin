@@ -11,16 +11,12 @@ import {
   ContainerComponent,
   RowComponent,
   ColComponent,
-  CardGroupComponent,
   CardComponent,
   CardBodyComponent,
   FormDirective,
-  InputGroupComponent,
-  InputGroupTextDirective,
   FormControlDirective,
   ButtonDirective
 } from '@coreui/angular';
-import { IconDirective } from '@coreui/icons-angular';
 import { NgIf } from '@angular/common';
 
 @Component({
@@ -33,13 +29,9 @@ import { NgIf } from '@angular/common';
     ContainerComponent,
     RowComponent,
     ColComponent,
-    CardGroupComponent,
     CardComponent,
     CardBodyComponent,
     FormDirective,
-    InputGroupComponent,
-    InputGroupTextDirective,
-    IconDirective,
     FormControlDirective,
     ButtonDirective,
     NgIf
@@ -48,6 +40,7 @@ import { NgIf } from '@angular/common';
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   errorMessage: string = '';
+  isLoading: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -64,6 +57,9 @@ export class LoginComponent implements OnInit {
 
   onSubmit(): void {
     if (this.loginForm.valid) {
+      this.isLoading = true;
+      this.errorMessage = '';
+
       const { username, password } = this.loginForm.value;
 
       this.authService.login(username, password).subscribe({
@@ -72,10 +68,12 @@ export class LoginComponent implements OnInit {
           localStorage.setItem('refresh_token', response.refresh);
           localStorage.setItem('user_type', response.user_type);
 
+          this.isLoading = false;
           this.router.navigate(['/dashboard']);
         },
         error: (err) => {
-          this.errorMessage = err.error.detail || 'Login failed';
+          this.isLoading = false;
+          this.errorMessage = err.error.detail || 'Login failed. Please check your credentials and try again.';
         }
       });
     }
