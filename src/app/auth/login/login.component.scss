@@ -4,7 +4,7 @@
   --font-sans: 'Montserrat', sans-serif;
   --font-serif: 'Cardo', serif;
   --font-poppins: 'Poppins', sans-serif;
-  --admin-primary: #5856d6;
+  --admin-primary: #4c49b8;
   --admin-secondary: #6c757d;
   --admin-dark: #212529;
   --text-color: #212529;
@@ -59,14 +59,17 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 
+/* Enhanced Card Header with Shimmer Effect */
 .card-header {
-    background: linear-gradient(135deg, var(--admin-primary), var(--admin-dark));
-    color: var(--text-color-one);
-    border-bottom: none;
-    border-radius: 0;
+    background: linear-gradient(135deg, var(--admin-primary), var(--admin-dark)) !important;
+    background-color: var(--admin-primary) !important;
+    color: var(--text-color-one) !important;
+    border-bottom: none !important;
+    border-radius: 0 !important;
     text-align: center;
     position: relative;
     overflow: hidden;
+    margin-bottom: 0 !important;
 }
 
 .card-header::before {
@@ -94,11 +97,13 @@
     font-family: var(--title-font);
     font-size: 28px;
     text-transform: uppercase;
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
     position: relative;
     z-index: 1;
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    color: var(--text-color-one);
+    color: var(--text-color-one) !important;
+    font-weight: 600;
+    letter-spacing: 1px;
 }
 
 .card-body {
@@ -121,7 +126,7 @@
     font-weight: bold;
 }
 
-/* No border design for form controls */
+/* Form Controls */
 .form-control {
     border-radius: 8px;
     padding: 12px 16px;
@@ -130,17 +135,17 @@
     font-family: var(--text-font);
     color: var(--text-color);
     background: white;
-    transition: none;
+    transition: all 0.3s ease;
 }
 
 .form-control:focus {
-    border-color: #ddd;
-    box-shadow: none;
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 0.25rem rgba(76, 73, 184, 0.25);
     outline: 0;
     color: var(--text-color);
 }
 
-/* Simplified Button Styling - Always enabled */
+/* Enhanced Button Styling */
 .btn-primary {
     border: none;
     border-radius: 8px;
@@ -153,19 +158,21 @@
     overflow: hidden;
     color: #fff;
     font-family: var(--text-font);
-    background: #504f88;
+    background: #3e3a9d;
     cursor: pointer;
+    font-size: 14px;
 }
 
 .btn-primary:hover {
     background: #4c49b8;
-    box-shadow: 0 8px 25px rgba(88, 86, 214, 0.3);
+    box-shadow: 0 8px 25px rgba(76, 73, 184, 0.3);
     color: #fff;
+    transform: translateY(-2px);
 }
 
 .btn-primary:focus {
     background: #4c49b8;
-    box-shadow: 0 0 0 0.25rem rgba(88, 86, 214, 0.25);
+    box-shadow: 0 0 0 0.25rem rgba(76, 73, 184, 0.25);
     color: #fff;
 }
 
@@ -175,7 +182,7 @@
     color: #fff;
 }
 
-/* Loading state - only affects opacity, not disabled state */
+/* Loading state */
 .btn-primary.loading {
     opacity: 0.8;
 }
@@ -230,6 +237,8 @@
 
 .spinner-border-sm {
     animation: spin 1s linear infinite;
+    width: 1rem;
+    height: 1rem;
 }
 
 @keyframes spin {
@@ -237,7 +246,35 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Enhanced mobile responsiveness */
+/* Success message with icon */
+.alert-success::before {
+    content: "✓";
+    font-weight: bold;
+    margin-right: 8px;
+    color: var(--success-color);
+}
+
+/* Error message with icon */
+.alert-danger::before {
+    content: "⚠";
+    font-weight: bold;
+    margin-right: 8px;
+    color: var(--danger-color);
+}
+
+/* Additional specificity for card header override */
+.login-section .card .card-header {
+    background: linear-gradient(135deg, #4c49b8, #212529) !important;
+    background-color: #4c49b8 !important;
+    color: #fff !important;
+    border: none !important;
+    border-bottom: none !important;
+}
+
+.login-section .card .card-header h2 {
+    color: #fff !important;
+    margin: 0 !important;
+}
 @media (max-width: 768px) {
     .login-section {
         padding: 20px 0;
@@ -274,20 +311,8 @@
         max-height: 60px;
         max-width: 150px;
     }
-}
 
-/* Success message with icon */
-.alert-success::before {
-    content: "✓";
-    font-weight: bold;
-    margin-right: 8px;
-    color: var(--success-color);
-}
-
-/* Error message with icon */
-.alert-danger::before {
-    content: "⚠";
-    font-weight: bold;
-    margin-right: 8px;
-    color: var(--danger-color);
+    .card-header h2 {
+        font-size: 20px;
+    }
 }
