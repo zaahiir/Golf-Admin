@@ -1,16 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { NgStyle, NgClass, NgForOf, NgIf, CommonModule } from '@angular/common';
+import { NgForOf, NgIf, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import {
-  RowComponent, ColComponent, TextColorDirective, CardComponent,
-  CardHeaderComponent, CardBodyComponent, FormFloatingDirective,
-  FormDirective, FormLabelDirective, FormControlDirective,
-  FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective,
-  FormSelectDirective, ButtonDirective
-} from '@coreui/angular';
-import { MemberService } from '../../common-service/member/member.service';
+import { RowComponent, ColComponent, TextColorDirective, CardComponent, CardHeaderComponent, CardBodyComponent, FormFloatingDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, ButtonDirective } from '@coreui/angular';
 import Swal from 'sweetalert2';
 import { Router, ActivatedRoute } from '@angular/router';
+import { MemberService } from '../../common-service/member/member.service';
+import { MemberEnquiryService } from '../../common-service/memberEnquiry/member-enquiry.service';
 
 interface Gender {
   id: number;
@@ -22,11 +17,6 @@ interface Country {
   countryName: string;
 }
 
-interface Plan {
-  id: number;
-  planName: string;
-}
-
 interface PaymentStatus {
   id: number;
   statusName: string;
@@ -35,6 +25,50 @@ interface PaymentStatus {
 interface PaymentMethod {
   id: number;
   methodName: string;
+}
+
+interface Plan {
+  id: number;
+  planName: string;
+}
+
+interface MemberEnquiry {
+  id: number;
+  memberEnquiryDate: string;
+  memberEnquiryPlan: any;
+  memberEnquiryFirstName: string;
+  memberEnquiryLastName: string;
+  memberEnquiryPhoneNumber: string;
+  memberEnquiryEmail: string;
+  memberEnquiryMessage: string;
+}
+
+interface Member {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  alternatePhoneNumber?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  nationality?: string;
+  address?: string;
+  plan: string;
+  golfClubId: string;
+  membershipStartDate?: string;
+  membershipEndDate?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+  paymentStatus?: string;
+  paymentMethod?: string;
+  referredBy?: string;
+  profilePhoto?: string;
+  idProof?: string;
+  handicap: boolean;
+  enquiryId?: string;
+  enquiryMessage?: string;
 }
 
 @Component({
@@ -54,180 +88,264 @@ export class UpdateMembersComponent implements OnInit {
   memberForm!: FormGroup;
   loading = false;
   submitted = false;
-  customStylesValidated = false;
-  memberId: string = '';
+  selectedProfileFile: File | null = null;
+  selectedIdProofFile: File | null = null;
+  profilePhotoPreview: string | ArrayBuffer | null = null;
+  idProofPreview: string | ArrayBuffer | null = null;
 
   genders: Gender[] = [];
   nationalities: Country[] = [];
-  plans: Plan[] = [];
   paymentStatuses: PaymentStatus[] = [];
   paymentMethods: PaymentMethod[] = [];
+  plans: Plan[] = [];
 
-  profilePhotoFile: File | null = null;
-  idProofFile: File | null = null;
-  profilePhotoPreview: string | ArrayBuffer | null = null;
-  idProofPreview: string | ArrayBuffer | null = null;
-  existingProfilePhoto: string | null = null;
-  existingIdProof: string | null = null;
+  memberId: string | null = null;
+  memberData: Member | null = null;
+  pageTitle = 'Update Member Profile';
+
+  // Define the required fields for validation
+  private readonly requiredFields = ['firstName', 'lastName', 'email', 'phoneNumber', 'plan'];
 
   constructor(
     private fb: FormBuilder,
+    private memberService: MemberService,
+    private memberEnquiryService: MemberEnquiryService,
     private router: Router,
-    private route: ActivatedRoute,
-    private memberService: MemberService
+    private route: ActivatedRoute
   ) {
     this.initializeForm();
   }
 
-  get f() { return this.memberForm.controls; }
-
   private initializeForm(): void {
-    const currentDate = new Date().toISOString().split('T')[0];
-
     this.memberForm = this.fb.group({
+      // ONLY Required fields with validators
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      alternatePhoneNumber: ['', [Validators.pattern('^[0-9]{10}$')]],
-      address: ['', [Validators.required, Validators.minLength(10)]],
-      dateOfBirth: ['', [Validators.required]],
-      gender: ['', [Validators.required]],
-      nationality: ['', [Validators.required]],
+      phoneNumber: ['', [Validators.required]],
       plan: ['', [Validators.required]],
-      golfClubId: [{value: '', disabled: true}],
-      membershipStartDate: [currentDate, [Validators.required]],
+
+      // ALL Optional fields - NO validators
+      alternatePhoneNumber: [''],
+      dateOfBirth: [''],
+      gender: [''],
+      nationality: [''],
+      address: [''],
+      golfClubId: [''],
+      membershipStartDate: [''],
       membershipEndDate: [''],
-      emergencyContactName: ['', [Validators.required]],
-      emergencyContactPhone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      emergencyContactRelation: ['', [Validators.required]],
-      paymentStatus: ['', [Validators.required]],
-      paymentMethod: ['', [Validators.required]],
+      emergencyContactName: [''],
+      emergencyContactPhone: [''],
+      emergencyContactRelation: [''],
+      paymentStatus: [''],
+      paymentMethod: [''],
       referredBy: [''],
-      handicap: [false]
+      profilePhoto: [''],
+      idProof: [''],
+      handicap: [false],
+      enquiryId: [''],
+      enquiryMessage: ['']
     });
   }
 
   async ngOnInit(): Promise<void> {
     try {
-      this.route.params.subscribe(params => {
-        this.memberId = params['id'];
-        this.loadMemberData(this.memberId);
-      });
+      // Get member ID from route
+      this.memberId = this.route.snapshot.paramMap.get('id');
+
+      if (!this.memberId) {
+        await this.showError('Member ID not found');
+        this.router.navigate(['/members']);
+        return;
+      }
+
+      await this.loadDropdownData();
+      await this.loadMemberData();
     } catch (error) {
-      await this.showError('An error occurred during initialization.');
+      await this.showError('Failed to load member data');
     }
   }
 
-  async loadGenders(): Promise<void> {
+  private async loadMemberData(): Promise<void> {
     try {
-      const response = await this.memberService.getGender();
-      if (response?.data) {
-        this.genders = response.data;
+      const response = await this.memberService.listMember(this.memberId!);
+
+      if (response?.data?.code === 1 && response.data.data && response.data.data.length > 0) {
+        this.memberData = response.data.data[0];
+        this.populateForm();
+      } else {
+        await this.showError('Failed to load member data');
+        this.router.navigate(['/members']);
       }
     } catch (error) {
-      throw error;
+      console.error('Error loading member data:', error);
+      await this.showError('Failed to load member data');
+      this.router.navigate(['/members']);
     }
   }
 
-  async loadNationalities(): Promise<void> {
-    try {
-      const response = await this.memberService.getNationality();
-      if (response?.data) {
-        this.nationalities = response.data;
+  private populateForm(): void {
+    if (!this.memberData) return;
+
+    // Handle plan ID - convert plan name to ID if needed
+    let planId = '';
+    if (this.memberData.plan) {
+      // First try to find by plan name
+      const planByName = this.plans.find(plan =>
+        plan.planName.toLowerCase().trim() === this.memberData!.plan.toLowerCase().trim()
+      );
+
+      if (planByName) {
+        planId = planByName.id.toString();
+      } else {
+        // If not found by name, try by ID
+        const planById = this.plans.find(plan => plan.id.toString() === this.memberData!.plan);
+        if (planById) {
+          planId = planById.id.toString();
+        }
       }
-    } catch (error) {
-      throw error;
     }
-  }
 
-  async loadPlans(): Promise<void> {
-    try {
-      const response = await this.memberService.getPlan();
-      if (response?.data) {
-        this.plans = response.data;
+    // Handle gender ID - convert gender name to ID if needed
+    let genderId = '';
+    if (this.memberData.gender) {
+      const genderByName = this.genders.find(gender =>
+        gender.genderName.toLowerCase().trim() === this.memberData!.gender!.toLowerCase().trim()
+      );
+
+      if (genderByName) {
+        genderId = genderByName.id.toString();
+      } else {
+        const genderById = this.genders.find(gender => gender.id.toString() === this.memberData!.gender);
+        if (genderById) {
+          genderId = genderById.id.toString();
+        }
       }
-    } catch (error) {
-      throw error;
     }
-  }
 
-  async loadPaymentStatuses(): Promise<void> {
-    try {
-      const response = await this.memberService.getPaymentStatus();
-      if (response?.data) {
-        this.paymentStatuses = response.data;
+    // Handle nationality ID - convert nationality name to ID if needed
+    let nationalityId = '';
+    if (this.memberData.nationality) {
+      const nationalityByName = this.nationalities.find(nationality =>
+        nationality.countryName.toLowerCase().trim() === this.memberData!.nationality!.toLowerCase().trim()
+      );
+
+      if (nationalityByName) {
+        nationalityId = nationalityByName.id.toString();
+      } else {
+        const nationalityById = this.nationalities.find(nationality => nationality.id.toString() === this.memberData!.nationality);
+        if (nationalityById) {
+          nationalityId = nationalityById.id.toString();
+        }
       }
-    } catch (error) {
-      throw error;
     }
-  }
 
-  async loadPaymentMethods(): Promise<void> {
-    try {
-      const response = await this.memberService.getPaymentMethod();
-      if (response?.data) {
-        this.paymentMethods = response.data;
+    // Handle payment status ID
+    let paymentStatusId = '';
+    if (this.memberData.paymentStatus) {
+      const statusByName = this.paymentStatuses.find(status =>
+        status.statusName.toLowerCase().trim() === this.memberData!.paymentStatus!.toLowerCase().trim()
+      );
+
+      if (statusByName) {
+        paymentStatusId = statusByName.id.toString();
+      } else {
+        const statusById = this.paymentStatuses.find(status => status.id.toString() === this.memberData!.paymentStatus);
+        if (statusById) {
+          paymentStatusId = statusById.id.toString();
+        }
       }
-    } catch (error) {
-      throw error;
+    }
+
+    // Handle payment method ID
+    let paymentMethodId = '';
+    if (this.memberData.paymentMethod) {
+      const methodByName = this.paymentMethods.find(method =>
+        method.methodName.toLowerCase().trim() === this.memberData!.paymentMethod!.toLowerCase().trim()
+      );
+
+      if (methodByName) {
+        paymentMethodId = methodByName.id.toString();
+      } else {
+        const methodById = this.paymentMethods.find(method => method.id.toString() === this.memberData!.paymentMethod);
+        if (methodById) {
+          paymentMethodId = methodById.id.toString();
+        }
+      }
+    }
+
+    // Patch the form with member data
+    this.memberForm.patchValue({
+      firstName: this.memberData.firstName || '',
+      lastName: this.memberData.lastName || '',
+      email: this.memberData.email || '',
+      phoneNumber: this.memberData.phoneNumber || '',
+      alternatePhoneNumber: this.memberData.alternatePhoneNumber || '',
+      dateOfBirth: this.memberData.dateOfBirth || '',
+      gender: genderId,
+      nationality: nationalityId,
+      address: this.memberData.address || '',
+      plan: planId,
+      golfClubId: this.memberData.golfClubId || '',
+      membershipStartDate: this.memberData.membershipStartDate || '',
+      membershipEndDate: this.memberData.membershipEndDate || '',
+      emergencyContactName: this.memberData.emergencyContactName || '',
+      emergencyContactPhone: this.memberData.emergencyContactPhone || '',
+      emergencyContactRelation: this.memberData.emergencyContactRelation || '',
+      paymentStatus: paymentStatusId,
+      paymentMethod: paymentMethodId,
+      referredBy: this.memberData.referredBy || '',
+      handicap: this.memberData.handicap || false,
+      enquiryId: this.memberData.enquiryId || '',
+      enquiryMessage: this.memberData.enquiryMessage || ''
+    });
+
+    // Set existing file previews
+    if (this.memberData.profilePhoto) {
+      this.profilePhotoPreview = this.memberData.profilePhoto;
+    }
+
+    if (this.memberData.idProof) {
+      this.idProofPreview = this.memberData.idProof;
     }
   }
 
-  async loadMemberData(memberId: string): Promise<void> {
+  private async loadDropdownData(): Promise<void> {
     try {
-      await Promise.all([
-        this.loadGenders(),
-        this.loadNationalities(),
-        this.loadPlans(),
-        this.loadPaymentStatuses(),
-        this.loadPaymentMethods()
+      const [genderRes, countryRes, planRes, statusRes, methodRes] = await Promise.all([
+        this.memberService.getGender(),
+        this.memberService.getNationality(),
+        this.memberService.getPlan(),
+        this.memberService.getPaymentStatus(),
+        this.memberService.getPaymentMethod()
       ]);
 
-      const response = await this.memberService.listMember(memberId);
-      if (response?.data?.code === 1 && response.data.data?.length > 0) {
-        const memberData = response.data.data[0];
+      if (genderRes?.data) {
+        this.genders = Array.isArray(genderRes.data) ? genderRes.data :
+                      genderRes.data.data ? genderRes.data.data : [];
+      }
 
-        const genderId = this.genders.find(g => g.genderName.toLowerCase() === memberData.gender.toLowerCase())?.id;
-        const nationalityId = this.nationalities.find(n => n.countryName.toLowerCase() === memberData.nationality.toLowerCase())?.id;
-        const planId = this.plans.find(p => p.planName.toLowerCase() === memberData.plan.toLowerCase())?.id;
-        const paymentStatusId = this.paymentStatuses.find(s => s.statusName.toLowerCase() === memberData.paymentStatus.toLowerCase())?.id;
-        const paymentMethodId = this.paymentMethods.find(m => m.methodName.toLowerCase() === memberData.paymentMethod.toLowerCase())?.id;
+      if (countryRes?.data) {
+        this.nationalities = Array.isArray(countryRes.data) ? countryRes.data :
+                           countryRes.data.data ? countryRes.data.data : [];
+      }
 
-        this.memberForm.patchValue({
-          firstName: memberData.firstName,
-          lastName: memberData.lastName,
-          email: memberData.email,
-          phoneNumber: memberData.phoneNumber,
-          alternatePhoneNumber: memberData.alternatePhoneNumber || '',
-          address: memberData.address,
-          dateOfBirth: memberData.dateOfBirth,
-          gender: genderId,
-          nationality: nationalityId,
-          plan: planId,
-          golfClubId: memberData.golfClubId,
-          membershipStartDate: memberData.membershipStartDate,
-          membershipEndDate: memberData.membershipEndDate,
-          emergencyContactName: memberData.emergencyContactName,
-          emergencyContactPhone: memberData.emergencyContactPhone,
-          emergencyContactRelation: memberData.emergencyContactRelation,
-          paymentStatus: paymentStatusId,
-          paymentMethod: paymentMethodId,
-          referredBy: memberData.referredBy || '',
-          handicap: memberData.handicap
-        });
+      if (planRes?.data) {
+        this.plans = Array.isArray(planRes.data) ? planRes.data :
+                     planRes.data.data ? planRes.data.data : [];
+      }
 
-        if (memberData.profilePhoto) {
-          this.existingProfilePhoto = memberData.profilePhoto;
-          this.profilePhotoPreview = memberData.profilePhoto;
-        }
-        if (memberData.idProof) {
-          this.existingIdProof = memberData.idProof;
-          this.idProofPreview = memberData.idProof;
-        }
+      if (statusRes?.data) {
+        this.paymentStatuses = Array.isArray(statusRes.data) ? statusRes.data :
+                              statusRes.data.data ? statusRes.data.data : [];
+      }
+
+      if (methodRes?.data) {
+        this.paymentMethods = Array.isArray(methodRes.data) ? methodRes.data :
+                             methodRes.data.data ? methodRes.data.data : [];
       }
     } catch (error) {
-      await this.showError('Failed to load member data.');
+      throw error;
     }
   }
 
@@ -235,80 +353,182 @@ export class UpdateMembersComponent implements OnInit {
     const file = event.target.files[0];
     if (file) {
       if (type === 'profile') {
-        this.profilePhotoFile = file;
-        this.readFile(file).then(result => {
-          this.profilePhotoPreview = result;
-        });
+        this.selectedProfileFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.profilePhotoPreview = e.target?.result || null;
+        };
+        reader.readAsDataURL(file);
       } else {
-        this.idProofFile = file;
-        this.readFile(file).then(result => {
-          this.idProofPreview = result;
-        });
+        this.selectedIdProofFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.idProofPreview = e.target?.result || null;
+        };
+        reader.readAsDataURL(file);
       }
     }
-  }
-
-  private readFile(file: File): Promise<string | ArrayBuffer> {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result || '');
-      reader.readAsDataURL(file);
-    });
   }
 
   removeFile(type: 'profile' | 'idProof'): void {
     if (type === 'profile') {
-      this.profilePhotoFile = null;
+      this.selectedProfileFile = null;
       this.profilePhotoPreview = null;
-      this.existingProfilePhoto = null;
+      const fileInput = document.getElementById('profilePhoto') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     } else {
-      this.idProofFile = null;
+      this.selectedIdProofFile = null;
       this.idProofPreview = null;
-      this.existingIdProof = null;
+      const fileInput = document.getElementById('idProof') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     }
   }
 
   async onSubmit(): Promise<void> {
-    this.customStylesValidated = true;
-    this.submitted = true;
-
-    if (this.memberForm.invalid) {
-      Object.values(this.memberForm.controls).forEach(control => {
-        if (control.invalid) {
-          control.markAsTouched();
-        }
-      });
-      return;
-    }
-
-    this.loading = true;
-
     try {
-      const formData = new FormData();
-      Object.keys(this.memberForm.value).forEach(key => {
-        const value = this.memberForm.get(key)?.value;
-        if (value !== null && value !== undefined) {
-          formData.append(key, value);
+      this.submitted = true;
+
+      // Check if form is invalid - this will now only check the 5 required fields
+      if (this.memberForm.invalid) {
+        const firstInvalidField = this.getFirstInvalidField();
+        if (firstInvalidField) {
+          const element = document.querySelector(`[formcontrolname="${firstInvalidField}"]`);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      });
-
-      if (this.profilePhotoFile) {
-        formData.append('profilePhoto', this.profilePhotoFile);
-      }
-      if (this.idProofFile) {
-        formData.append('idProof', this.idProofFile);
+        await this.showError('Please fill in all required fields correctly.');
+        return;
       }
 
-      const response = await this.memberService.processMember(formData, this.memberId);
+      this.loading = true;
+
+      const formData = new FormData();
+      const formValues = this.memberForm.getRawValue();
+
+      // Validate plan ID before submission
+      const planId = formValues.plan;
+      if (!planId || planId === '' || planId === 'null') {
+        await this.showError('Please select a valid membership plan.');
+        this.loading = false;
+        return;
+      }
+
+      // Verify plan exists
+      const planExists = this.plans.find(plan => plan.id.toString() === planId.toString());
+      if (!planExists) {
+        await this.showError('Selected plan is invalid. Please select a valid membership plan.');
+        this.loading = false;
+        return;
+      }
+
+      // Add required fields
+      formData.append('firstName', (formValues.firstName || '').toString().trim());
+      formData.append('lastName', (formValues.lastName || '').toString().trim());
+      formData.append('email', (formValues.email || '').toString().trim());
+      formData.append('phoneNumber', (formValues.phoneNumber || '').toString().trim());
+      formData.append('plan', planId.toString());
+
+      // Add optional fields only if they have values
+      if (formValues.alternatePhoneNumber && formValues.alternatePhoneNumber.trim()) {
+        formData.append('alternatePhoneNumber', formValues.alternatePhoneNumber.trim());
+      }
+
+      if (formValues.dateOfBirth) {
+        formData.append('dateOfBirth', new Date(formValues.dateOfBirth).toISOString().split('T')[0]);
+      }
+
+      if (formValues.gender && formValues.gender !== '' && formValues.gender !== 'null') {
+        formData.append('gender', formValues.gender.toString());
+      }
+
+      if (formValues.nationality && formValues.nationality !== '' && formValues.nationality !== 'null') {
+        formData.append('nationality', formValues.nationality.toString());
+      }
+
+      if (formValues.address && formValues.address.trim()) {
+        formData.append('address', formValues.address.trim());
+      }
+
+      if (formValues.membershipStartDate) {
+        formData.append('membershipStartDate', new Date(formValues.membershipStartDate).toISOString().split('T')[0]);
+      }
+
+      if (formValues.membershipEndDate) {
+        formData.append('membershipEndDate', new Date(formValues.membershipEndDate).toISOString().split('T')[0]);
+      }
+
+      if (formValues.emergencyContactName && formValues.emergencyContactName.trim()) {
+        formData.append('emergencyContactName', formValues.emergencyContactName.trim());
+      }
+
+      if (formValues.emergencyContactPhone && formValues.emergencyContactPhone.trim()) {
+        formData.append('emergencyContactPhone', formValues.emergencyContactPhone.trim());
+      }
+
+      if (formValues.emergencyContactRelation && formValues.emergencyContactRelation.trim()) {
+        formData.append('emergencyContactRelation', formValues.emergencyContactRelation.trim());
+      }
+
+      if (formValues.paymentStatus && formValues.paymentStatus !== '' && formValues.paymentStatus !== 'null') {
+        formData.append('paymentStatus', formValues.paymentStatus.toString());
+      }
+
+      if (formValues.paymentMethod && formValues.paymentMethod !== '' && formValues.paymentMethod !== 'null') {
+        formData.append('paymentMethod', formValues.paymentMethod.toString());
+      }
+
+      if (formValues.referredBy && formValues.referredBy.trim()) {
+        formData.append('referredBy', formValues.referredBy.trim());
+      }
+
+      formData.append('handicap', formValues.handicap ? 'true' : 'false');
+
+      if (formValues.enquiryId) {
+        formData.append('enquiryId', formValues.enquiryId.toString());
+      }
+
+      if (formValues.enquiryMessage && formValues.enquiryMessage.trim()) {
+        formData.append('enquiryMessage', formValues.enquiryMessage.trim());
+      }
+
+      // Add files if selected
+      if (this.selectedProfileFile) {
+        formData.append('profilePhoto', this.selectedProfileFile);
+      }
+
+      if (this.selectedIdProofFile) {
+        formData.append('idProof', this.selectedIdProofFile);
+      }
+
+      const response = await this.memberService.processMember(formData, this.memberId!);
 
       if (response?.data?.code === 1) {
-        await Swal.fire("Updated!", response.data.message, "success");
+        await Swal.fire({
+          title: 'Success!',
+          text: 'Member profile has been updated successfully.',
+          icon: 'success',
+          confirmButtonText: 'Ok'
+        });
+
         this.router.navigate(['/members']);
       } else {
-        throw new Error(response?.data?.message || 'Failed to update member');
+        const errorMessage = response?.data?.message || 'Failed to update member';
+        const errors = response?.data?.errors;
+
+        if (errors) {
+          let errorDetails = '';
+          for (const [field, fieldErrors] of Object.entries(errors)) {
+            if (Array.isArray(fieldErrors)) {
+              errorDetails += `${field}: ${fieldErrors.join(', ')}\n`;
+            }
+          }
+          throw new Error(`${errorMessage}\n\nDetails:\n${errorDetails}`);
+        } else {
+          throw new Error(errorMessage);
+        }
       }
     } catch (error) {
-      await this.showError("An error occurred while updating the member.");
+      console.error('Update error:', error);
+      await this.showError(error instanceof Error ? error.message : 'Failed to update member');
     } finally {
       this.loading = false;
     }
@@ -318,8 +538,28 @@ export class UpdateMembersComponent implements OnInit {
     this.router.navigate(['/members']);
   }
 
+  get f() { return this.memberForm.controls; }
+
+  private getFirstInvalidField(): string | null {
+    const controls = this.memberForm.controls;
+    for (const name in controls) {
+      if (controls[name].invalid) {
+        return name;
+      }
+    }
+    return null;
+  }
+
+  // Only validate the actually required fields
   isFieldInvalid(fieldName: string): boolean {
     const field = this.memberForm.get(fieldName);
+    const requiredFields = ['firstName', 'lastName', 'email', 'phoneNumber', 'plan'];
+
+    // Only show validation errors for required fields
+    if (!requiredFields.includes(fieldName)) {
+      return false;
+    }
+
     return Boolean(field && field.invalid && (field.dirty || field.touched || this.submitted));
   }
 
@@ -330,20 +570,14 @@ export class UpdateMembersComponent implements OnInit {
     if (control.errors['required']) return 'This field is required';
     if (control.errors['email']) return 'Please enter a valid email address';
     if (control.errors['pattern']) {
-      if (fieldName.includes('Phone')) return 'Please enter a valid 10-digit phone number';
+      if (fieldName === 'phoneNumber') return 'Please enter a valid phone number';
     }
-    if (control.errors['minlength']) {
-      return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
-    }
+    if (control.errors['minlength']) return `Minimum length is ${control.errors['minlength'].requiredLength} characters`;
 
     return 'Invalid input';
   }
 
   private async showError(message: string): Promise<void> {
-    await Swal.fire({
-      title: 'Error',
-      text: message,
-      icon: 'error'
-    });
+    await Swal.fire('Error', message, 'error');
   }
 }

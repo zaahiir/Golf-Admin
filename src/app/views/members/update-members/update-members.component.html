@@ -46,51 +46,36 @@
           <c-col [cFormFloating]="true" md="6">
             <input cFormControl id="alternatePhoneNumber" formControlName="alternatePhoneNumber" type="tel" placeholder="Alternate Phone Number" />
             <label cLabel for="alternatePhoneNumber" class="ms-2">Alternate Phone Number</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('alternatePhoneNumber')">
-              {{ getErrorMessage('alternatePhoneNumber') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
-            <input cFormControl id="dateOfBirth" formControlName="dateOfBirth" required type="date" placeholder="Date of Birth" />
+            <input cFormControl id="dateOfBirth" formControlName="dateOfBirth" type="date" placeholder="Date of Birth" />
             <label cLabel for="dateOfBirth" class="ms-2">Date of Birth</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('dateOfBirth')">
-              {{ getErrorMessage('dateOfBirth') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
-            <select cSelect id="gender" formControlName="gender" required>
+            <select cSelect id="gender" formControlName="gender">
               <option value="">Select Gender</option>
               <option *ngFor="let gender of genders" [value]="gender.id">
                 {{ gender.genderName }}
               </option>
             </select>
             <label cLabel for="gender" class="ms-2">Gender</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('gender')">
-              {{ getErrorMessage('gender') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
-            <select cSelect id="nationality" formControlName="nationality" required>
+            <select cSelect id="nationality" formControlName="nationality">
               <option value="">Select Nationality</option>
               <option *ngFor="let nationality of nationalities" [value]="nationality.id">
                 {{ nationality.countryName }}
               </option>
             </select>
             <label cLabel for="nationality" class="ms-2">Nationality</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('nationality')">
-              {{ getErrorMessage('nationality') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="12">
-            <textarea cFormControl id="address" formControlName="address" required placeholder="Address" rows="3"></textarea>
+            <textarea cFormControl id="address" formControlName="address" placeholder="Address" rows="3"></textarea>
             <label cLabel for="address" class="ms-2">Address</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('address')">
-              {{ getErrorMessage('address') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
@@ -112,12 +97,9 @@
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
-            <input cFormControl id="membershipStartDate" formControlName="membershipStartDate" required type="date"
+            <input cFormControl id="membershipStartDate" formControlName="membershipStartDate" type="date"
                    placeholder="Membership Start Date" />
             <label cLabel for="membershipStartDate" class="ms-2">Membership Start Date</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('membershipStartDate')">
-              {{ getErrorMessage('membershipStartDate') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
@@ -128,57 +110,42 @@
 
           <!-- Payment Information -->
           <c-col [cFormFloating]="true" md="6">
-            <select cSelect id="paymentStatus" formControlName="paymentStatus" required>
+            <select cSelect id="paymentStatus" formControlName="paymentStatus">
               <option value="">Select Payment Status</option>
               <option *ngFor="let status of paymentStatuses" [value]="status.id">
                 {{ status.statusName }}
               </option>
             </select>
             <label cLabel for="paymentStatus" class="ms-2">Payment Status</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('paymentStatus')">
-              {{ getErrorMessage('paymentStatus') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
-            <select cSelect id="paymentMethod" formControlName="paymentMethod" required>
+            <select cSelect id="paymentMethod" formControlName="paymentMethod">
               <option value="">Select Payment Method</option>
               <option *ngFor="let method of paymentMethods" [value]="method.id">
                 {{ method.methodName }}
               </option>
             </select>
             <label cLabel for="paymentMethod" class="ms-2">Payment Method</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('paymentMethod')">
-              {{ getErrorMessage('paymentMethod') }}
-            </c-form-feedback>
           </c-col>
 
           <!-- Emergency Contact -->
           <c-col [cFormFloating]="true" md="6">
-            <input cFormControl id="emergencyContactName" formControlName="emergencyContactName" required type="text"
+            <input cFormControl id="emergencyContactName" formControlName="emergencyContactName" type="text"
                    placeholder="Emergency Contact Name" />
             <label cLabel for="emergencyContactName" class="ms-2">Emergency Contact Name</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('emergencyContactName')">
-              {{ getErrorMessage('emergencyContactName') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
-            <input cFormControl id="emergencyContactPhone" formControlName="emergencyContactPhone" required type="tel"
+            <input cFormControl id="emergencyContactPhone" formControlName="emergencyContactPhone" type="tel"
                    placeholder="Emergency Contact Phone" />
             <label cLabel for="emergencyContactPhone" class="ms-2">Emergency Contact Phone</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('emergencyContactPhone')">
-              {{ getErrorMessage('emergencyContactPhone') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
-            <input cFormControl id="emergencyContactRelation" formControlName="emergencyContactRelation" required type="text"
+            <input cFormControl id="emergencyContactRelation" formControlName="emergencyContactRelation" type="text"
                    placeholder="Relationship" />
             <label cLabel for="emergencyContactRelation" class="ms-2">Relationship</label>
-            <c-form-feedback [valid]="false" *ngIf="isFieldInvalid('emergencyContactRelation')">
-              {{ getErrorMessage('emergencyContactRelation') }}
-            </c-form-feedback>
           </c-col>
 
           <c-col [cFormFloating]="true" md="6">
