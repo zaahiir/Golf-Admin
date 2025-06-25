@@ -126,6 +126,45 @@
     font-weight: bold;
 }
 
+/* Password Label Container */
+.password-label-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+/* Password Toggle Button */
+.password-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--admin-primary);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.3s ease;
+    font-family: var(--text-font);
+    outline: none;
+}
+
+.password-toggle-btn:hover {
+    color: var(--admin-dark);
+    transform: scale(1.05);
+}
+
+.password-toggle-btn:focus {
+    outline: 2px solid var(--admin-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.password-toggle-btn:active {
+    transform: scale(0.95);
+}
+
 /* Form Controls */
 .form-control {
     border-radius: 8px;
@@ -275,6 +314,7 @@
     color: #fff !important;
     margin: 0 !important;
 }
+
 @media (max-width: 768px) {
     .login-section {
         padding: 20px 0;
@@ -296,6 +336,10 @@
     .btn-primary {
         padding: 12px 20px;
     }
+
+    .password-toggle-btn {
+        font-size: 11px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -314,5 +358,14 @@
 
     .card-header h2 {
         font-size: 20px;
+    }
+
+    .password-label-container {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .password-toggle-btn {
+        font-size: 10px;
     }
 }

@@ -41,6 +41,7 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   errorMessage: string = '';
   isLoading: boolean = false;
+  showPassword: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -54,6 +55,10 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {}
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
