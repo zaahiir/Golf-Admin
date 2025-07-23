@@ -18,7 +18,8 @@ export interface LoginResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://mastergolfclub.com/apis/';
+  // private apiUrl = 'https://mastergolfclub.com/apis/';
+  private apiUrl = 'http://localhost/apis/';
   private isBrowser: boolean;
 
   // Authentication state
@@ -29,7 +30,7 @@ export class AuthService {
   private autoLogoutTimer: any = null;
   private sessionCheckTimer: Subscription | null = null;
   private readonly SESSION_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
-  // private readonly SESSION_DURATION = 3 * 60 * 1000; 
+  // private readonly SESSION_DURATION = 3 * 60 * 1000;
   private readonly CHECK_INTERVAL = 60 * 1000; // Check every minute
 
   constructor(
